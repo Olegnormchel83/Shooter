@@ -56,6 +56,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool AimEnabled = false;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Movement")
+	float StaminaPoints = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float CurrentStamina = StaminaPoints;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Movement")
+	float MinusStamina = 1.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Movement", meta = (ClampMin = "0", ClampMax = "100"))
+	float PlusStamina = 1.0f;
 
 	UFUNCTION()
 	void InputAxisY(float Value);
@@ -75,5 +86,11 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ChangeMovementState();
+
+	UFUNCTION(BlueprintCallable)
+	void DecreaseStamina();
+
+	UFUNCTION(BlueprintCallable)
+	void IncreaseStamina();
 };
 

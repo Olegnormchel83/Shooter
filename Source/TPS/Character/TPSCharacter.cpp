@@ -112,8 +112,21 @@ void ATPSCharacter::InputAxisX(float Value)
 
 void ATPSCharacter::MovementTick(float DeltaTime)
 {
-	AddMovementInput(FVector(1.0f, 0.0f, 0.0f), AxisX);
-	AddMovementInput(FVector(0.0f, 1.0f, 0.0f), AxisY);
+	if ((SprintRunEnabled && AxisX !=0) || (SprintRunEnabled && AxisY != 0))
+	{
+		AddMovementInput(GetActorForwardVector());
+		DecreaseStamina();
+	}
+	else 
+	{
+		AddMovementInput(FVector(1.0f, 0.0f, 0.0f), AxisX);
+		AddMovementInput(FVector(0.0f, 1.0f, 0.0f), AxisY);
+	}
+
+	if (!SprintRunEnabled)
+	{
+		IncreaseStamina(); //TODO: Допилить меху восстановления выносливости
+	}
 
 	APlayerController* myController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	if (myController)
@@ -127,7 +140,7 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 
 void ATPSCharacter::CharacterUpdate()
 {
-	float ResSpeed = 600.0f;
+	float ResSpeed = 400.0f;
 	switch (MovementState)
 	{
 	case EMovementState::Aim_State:
@@ -154,13 +167,13 @@ void ATPSCharacter::CharacterUpdate()
 
 void ATPSCharacter::ChangeMovementState()
 {
-	if (!WalkEnabled && !SprintRunEnabled && !AimEnabled)
+	if (!WalkEnabled && !SprintRunEnabled && !AimEnabled && FMath::IsNearlyZero(CurrentStamina))
 	{
 		MovementState = EMovementState::Run_State;
 	}
 	else
 	{
-		if (SprintRunEnabled)
+		if (SprintRunEnabled && !FMath::IsNearlyZero(CurrentStamina))
 		{
 			WalkEnabled = false;
 			AimEnabled = false;
@@ -186,4 +199,24 @@ void ATPSCharacter::ChangeMovementState()
 		}
 	}
 	CharacterUpdate();
+}
+
+void ATPSCharacter::DecreaseStamina()
+{
+	if (CurrentStamina > 0 && SprintRunEnabled)
+	{
+		CurrentStamina -= MinusStamina;
+	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Stamina: %f"), CurrentStamina));
+}
+
+void ATPSCharacter::IncreaseStamina()
+{
+	if (CurrentStamina < StaminaPoints && !SprintRunEnabled)
+	{
+		CurrentStamina += PlusStamina;
+	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Stamina: %f"), CurrentStamina));
 }

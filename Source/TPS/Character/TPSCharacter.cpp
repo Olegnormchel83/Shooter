@@ -65,7 +65,7 @@ void ATPSCharacter::Tick(float DeltaSeconds)
 
 	if (CursorToWorld != nullptr)
 	{
-		if (UHeadMountedDisplayFunctionLibrary::IsHeadMountedDisplayEnabled())
+		if (APlayerController* PC = Cast<APlayerController>(GetController()))
 		{
 			if (UWorld* World = GetWorld())
 			{
@@ -78,9 +78,7 @@ void ATPSCharacter::Tick(float DeltaSeconds)
 				FQuat SurfaceRotation = HitResult.ImpactNormal.ToOrientationRotator().Quaternion();
 				CursorToWorld->SetWorldLocationAndRotation(HitResult.Location, SurfaceRotation);
 			}
-		}
-		else if (APlayerController* PC = Cast<APlayerController>(GetController()))
-		{
+
 			FHitResult TraceHitResult;
 			PC->GetHitResultUnderCursor(ECC_Visibility, true, TraceHitResult);
 			FVector CursorFV = TraceHitResult.ImpactNormal;
@@ -112,7 +110,7 @@ void ATPSCharacter::InputAxisX(float Value)
 
 void ATPSCharacter::MovementTick(float DeltaTime)
 {
-	if ((SprintRunEnabled && AxisX !=0) || (SprintRunEnabled && AxisY != 0))
+	if (SprintRunEnabled && (AxisY != 0 || AxisX != 0))
 	{
 		AddMovementInput(GetActorForwardVector());
 		DecreaseStamina();
@@ -125,7 +123,7 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 
 	if (!SprintRunEnabled)
 	{
-		IncreaseStamina(); //TODO: Допилить меху восстановления выносливости
+		IncreaseStamina();
 	}
 
 	APlayerController* myController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
@@ -167,7 +165,7 @@ void ATPSCharacter::CharacterUpdate()
 
 void ATPSCharacter::ChangeMovementState()
 {
-	if (!WalkEnabled && !SprintRunEnabled && !AimEnabled && FMath::IsNearlyZero(CurrentStamina))
+	if (!WalkEnabled && !SprintRunEnabled && !AimEnabled)
 	{
 		MovementState = EMovementState::Run_State;
 	}
@@ -206,6 +204,11 @@ void ATPSCharacter::DecreaseStamina()
 	if (CurrentStamina > 0 && SprintRunEnabled)
 	{
 		CurrentStamina -= MinusStamina;
+		if (CurrentStamina <= 0)
+		{
+			SprintRunEnabled = false;
+			ChangeMovementState();
+		}
 	}
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Stamina: %f"), CurrentStamina));

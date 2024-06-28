@@ -66,7 +66,7 @@ public:
 	float MinusStamina = 1.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Movement", meta = (ClampMin = "0", ClampMax = "100"))
-	float PlusStamina = 1.0f;
+	float PlusStamina = 0.5f;
 
 	UFUNCTION()
 	void InputAxisY(float Value);

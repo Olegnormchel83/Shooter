@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Types.h"
+#include "Weapons/WeaponDefault.h"
+
 #include "TPSCharacter.generated.h"
 
 UCLASS(Blueprintable)
@@ -12,6 +14,8 @@ class ATPSCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+protected:
+	virtual void BeginPlay() override;
 public:
 	ATPSCharacter();
 
@@ -25,7 +29,7 @@ public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns CursorToWorld subobject **/
-	FORCEINLINE class UDecalComponent* GetCursorToWorld() { return CursorToWorld; }
+	//FORCEINLINE class UDecalComponent* GetCursorToWorld() { return CursorToWorld; }
 
 private:
 	/** Top down camera */
@@ -37,10 +41,18 @@ private:
 	class USpringArmComponent* CameraBoom;
 
 	/** A decal that projects to the cursor location. */
+	/*
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UDecalComponent* CursorToWorld;
+	*/
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
+	UMaterialInterface* CursorMaterial = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
+	FVector CursorSize = FVector(20.0f, 40.0f, 40.0f);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	EMovementState MovementState = EMovementState::Run_State;
 
@@ -68,11 +80,27 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Movement", meta = (ClampMin = "0", ClampMax = "100"))
 	float PlusStamina = 0.5f;
 
+	AWeaponDefault* CurrentWeapon = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Demo")
+	FName InitWeaponName;
+
+	UDecalComponent* CurrentCursor = nullptr;
+
+	UFUNCTION(BlueprintCallable)
+	UDecalComponent* GetCursorToWorld();
+
 	UFUNCTION()
 	void InputAxisY(float Value);
 
 	UFUNCTION()
 	void InputAxisX(float Value);
+
+	UFUNCTION()
+	void InputAttackPressed();
+
+	UFUNCTION()
+	void InputAttackReleased();
 
 	float AxisX = 0.0f;
 	float AxisY = 0.0f;
@@ -92,5 +120,35 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void IncreaseStamina();
+
+	UFUNCTION(BlueprintCallable)
+	void AttackCharEvent(bool bIsFiring);
+
+	UFUNCTION(BlueprintCallable)
+	AWeaponDefault* GetCurrentWeapon();
+
+	UFUNCTION(BlueprintCallable)
+	void InitWeapon(FName IdWepaon);
+
+	UFUNCTION(BlueprintCallable)
+	void TryReloadWeapon();
+
+	UFUNCTION()
+	void WeaponReloadStart(UAnimMontage* Anim);
+
+	UFUNCTION()
+	void WeaponReloadEnd();
+
+	UFUNCTION(BlueprintNativeEvent)
+	void WeaponReloadStart_BP(UAnimMontage* Anim);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void WeaponReloadEnd_BP();
+
+	UFUNCTION()
+	void CharFire(UAnimMontage* Anim);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void CharFire_BP(UAnimMontage* Anim);
 };
 

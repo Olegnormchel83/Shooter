@@ -12,7 +12,7 @@ AProjectileDefault::AProjectileDefault()
 	PrimaryActorTick.bCanEverTick = true;
 
 	BulletCollisionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Collision Sphere"));
-	BulletCollisionSphere->SetSphereRadius(16.f);
+	BulletCollisionSphere->SetSphereRadius(8.f);
 	BulletCollisionSphere->bReturnMaterialOnMove = true;
 	BulletCollisionSphere->SetCanEverAffectNavigation(false);
 
@@ -55,8 +55,10 @@ void AProjectileDefault::Tick(float DeltaTime)
 
 void AProjectileDefault::InitProjectile(FProjectileInfo InitParam)
 {
+	ProjectileSettings = InitParam;
+
 	BulletProjectileMovement->InitialSpeed = InitParam.ProjectileInitSpeed;
-	BulletProjectileMovement->MaxSpeed = InitParam.ProjectileInitSpeed;
+	BulletProjectileMovement->MaxSpeed = InitParam.ProjectileInitSpeed * 2;
 	this->SetLifeSpan(InitParam.ProjectileLifeTime);
 
 	if (InitParam.ProjectileStaticMesh)
@@ -79,7 +81,13 @@ void AProjectileDefault::InitProjectile(FProjectileInfo InitParam)
 		BulletFX->DestroyComponent();
 	}
 
-	ProjectileSettings = InitParam;
+	/*
+	UE_LOG(LogTemp, Warning, TEXT("_____InitParam_____"));
+	UE_LOG(LogTemp, Warning, TEXT("Init Speed: %.2f"), BulletProjectileMovement->InitialSpeed);
+	UE_LOG(LogTemp, Warning, TEXT("Max Speed: %.2f"), BulletProjectileMovement->MaxSpeed);
+	UE_LOG(LogTemp, Warning, TEXT("Projectile Lifetime: %.2f"), this->GetLifeSpan());
+	*/
+
 }
 
 void AProjectileDefault::BulletCollisionSphereHit(UPrimitiveComponent* HitComp, 

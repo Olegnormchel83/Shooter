@@ -48,7 +48,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
-	void InitProjectile(FProjectileInfo InitParam);
+	virtual void InitProjectile(FProjectileInfo InitParam);
 
 	UFUNCTION()
 	virtual void BulletCollisionSphereHit(class UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);

@@ -7,6 +7,8 @@
 
 #include "Types.generated.h"
 
+class AWeaponDefault;
+
 UENUM(BlueprintType)
 enum class EMovementState : uint8
 {
@@ -15,6 +17,17 @@ enum class EMovementState : uint8
 	Walk_State UMETA(DisplayName = "Walk State"),
 	Run_State UMETA(DisplayName = "Run State"),
 	SprintRun_State UMETA(DisplayName = "SprintRun State")
+};
+
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
+{
+	RifleType UMETA(DisplayName = "Rifle"),
+	ShotgunType UMETA(DisplayName = "Shotgun"),
+	SniperType UMETA(DisplayName = "SniperRifle"),
+	GrenadeLauncherType UMETA(DisplayName = "GrenadeLauncher"),
+	RocketLauncherType UMETA(DisplayName = "RocketLauncher"),
+	NoneType UMETA(DisplayName = "None")
 };
 
 USTRUCT(BlueprintType)
@@ -67,9 +80,6 @@ struct FProjectileInfo
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSettings")
 	float ProjectileInitSpeed = 2000.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSettings")
-	bool bIsLikeBomp = false;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FX")
 	TMap<TEnumAsByte<EPhysicalSurface>, UMaterialInterface*> HitDecals;
 
@@ -84,6 +94,9 @@ struct FProjectileInfo
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explode")
 	USoundBase* ExploseSound = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explode")
+	USoundBase* PreExploseSound = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explode")
 	float ProjectileMinRadiusDamage = 75.0f;
@@ -206,7 +219,7 @@ struct FWeaponInfo : public FTableRowBase
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Calss")
-	TSubclassOf<class AWeaponDefault> WeaponClass = nullptr;
+	TSubclassOf<AWeaponDefault> WeaponClass = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
 	float ReloadTime = 2.0f;
@@ -252,15 +265,82 @@ struct FWeaponInfo : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
 	FDropMeshInfo ShellBullets;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+	float SwitchTimeToWeapon = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+	UTexture2D* WeaponIcon = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+	EWeaponType WeaponType = EWeaponType::RifleType;
+
 };
 
 USTRUCT(BlueprintType)
-struct FAdditionalWeaponinfo
+struct FAdditionalWeaponInfo
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Stats")
 	int32 Round = 30;
+};
+
+USTRUCT(BlueprintType)
+struct FWeaponSlot
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponSlot")
+	FName NameItem;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponSlot")
+	FAdditionalWeaponInfo AdditionalInfo;
+
+};
+
+USTRUCT(BlueprintType)
+struct FAmmoSlot
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmmoSlot")
+	EWeaponType WeaponType = EWeaponType::RifleType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmmoSlot")
+	int32 Cout = 100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmmoSlot")
+	int32 MaxCout = 100;
+
+};
+
+USTRUCT(BlueprintType)
+struct FDropItem : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropItem")
+	UStaticMesh* WeaponStaticMesh = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropItem")
+	USkeletalMesh* WeaponSkeletalMesh = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropItem")
+	UParticleSystem* ParticleSystem = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropItem")
+	FTransform Offset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropItem")
+	FWeaponSlot WeaponInfo;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropItem")
+	FVector DropWeaponScale;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropItem")
+	FVector DropItemParticleScale;
+
 };
 
 UCLASS()

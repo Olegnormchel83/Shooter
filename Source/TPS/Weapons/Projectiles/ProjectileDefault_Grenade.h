@@ -24,6 +24,8 @@ public:
 
 	void TimerExplose(float DeltaTime);
 
+	virtual void InitProjectile(FProjectileInfo InitParam) override;
+
 	virtual void BulletCollisionSphereHit(class UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) override;
 
 	virtual void ImpactProjectile() override;
@@ -32,5 +34,8 @@ public:
 
 	bool TimerEnabled = false;
 	float TimerToExplose = 0.0f;
-	float TimeToExplose = 4.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Time to explose")
+	float TimeToExplose = 3.0f;
+
 };

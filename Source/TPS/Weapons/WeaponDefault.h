@@ -12,7 +12,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponFireStart, UAnimMontage*, AnimFire);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponReloadStart,UAnimMontage*,Anim);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponReloadEnd);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponReloadEnd, bool ,bIsSuccess, int32, AmmoSafe);
 
 UCLASS()
 class TPS_API AWeaponDefault : public AActor
@@ -43,7 +43,7 @@ public:
 	FWeaponInfo WeaponSettings;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Info")
-	FAdditionalWeaponinfo WeaponInfo;
+	FAdditionalWeaponInfo WeaponInfo;
 
 protected:
 	// Called when the game starts or when spawned
@@ -54,18 +54,12 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void FireTick(float DeltaTime);
-
 	void ReloadTick(float DeltaTime);
-
 	void DispersionTick(float DeltaTime);
-	
 	void ClipDropTick(float DeltaTime);
-
 	void ShellDropTick(float DeltaTime);
 
 	void WeaponInit();
-
-	
 
 	UFUNCTION(BlueprintCallable)
 	void SetWeaponStateFire(bool bIsFire);
@@ -74,6 +68,7 @@ public:
 
 	FProjectileInfo GetProjectile();
 
+	UFUNCTION()
 	void Fire();
 
 	void UpdateStateWeapon(EMovementState NewMovementState);
@@ -122,8 +117,11 @@ public:
 	int32 GetWeaponRound();
 
 	void InitReload();
-
 	void FinishReload();
+	void CancelReload();
+
+	bool CheckCanWeaponReload();
+	int8 GetAailableAmmoForReload();
 
 	UFUNCTION()
 	void InitDropMesh(UStaticMesh* DropMesh, FTransform Offset, FVector DropImpulseDirection, float LifeTimeMesh, float ImpulseRandomDisperssion, float PowerImpulse, float CustomMass);

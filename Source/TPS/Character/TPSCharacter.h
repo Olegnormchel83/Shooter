@@ -9,6 +9,8 @@
 
 #include "TPSCharacter.generated.h"
 
+class UTPSInventoryComponent;
+
 UCLASS(Blueprintable)
 class ATPSCharacter : public ACharacter
 {
@@ -85,7 +87,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Demo")
 	FName InitWeaponName;
 
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	int32 CurrentIndexWeapon = 0;
+
 	UDecalComponent* CurrentCursor = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UTPSInventoryComponent* InventoryComponent = nullptr;
 
 	UFUNCTION(BlueprintCallable)
 	UDecalComponent* GetCursorToWorld();
@@ -128,7 +136,13 @@ public:
 	AWeaponDefault* GetCurrentWeapon();
 
 	UFUNCTION(BlueprintCallable)
-	void InitWeapon(FName IdWepaon);
+	int32 GetCurrentWeaponIndex();
+
+	UFUNCTION(BlueprintCallable)
+	void InitWeapon(FName IdWepaon, FAdditionalWeaponInfo AdditionalWeaponInfo, int32 NewCurrentIndexWeapon);
+
+	UFUNCTION(BlueprintCallable)
+	void RemoveCurrentWeapon();
 
 	UFUNCTION(BlueprintCallable)
 	void TryReloadWeapon();
@@ -137,18 +151,25 @@ public:
 	void WeaponReloadStart(UAnimMontage* Anim);
 
 	UFUNCTION()
-	void WeaponReloadEnd();
+	void WeaponReloadEnd(bool bIsSuccess, int32 AmmoTake);
 
 	UFUNCTION(BlueprintNativeEvent)
 	void WeaponReloadStart_BP(UAnimMontage* Anim);
 
 	UFUNCTION(BlueprintNativeEvent)
-	void WeaponReloadEnd_BP();
+	void WeaponReloadEnd_BP(bool bIsSuccess);
 
 	UFUNCTION()
 	void CharFire(UAnimMontage* Anim);
 
 	UFUNCTION(BlueprintNativeEvent)
 	void CharFire_BP(UAnimMontage* Anim);
+
+	UFUNCTION(BlueprintCallable)
+	void TrySwitchNextWeapon();
+
+	UFUNCTION(BlueprintCallable)
+	void TrySwitchPreviousWeapon();
+
 };
 

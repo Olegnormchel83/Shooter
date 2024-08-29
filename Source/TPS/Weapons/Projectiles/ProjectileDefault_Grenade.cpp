@@ -38,9 +38,20 @@ void AProjectileDefault_Grenade::TimerExplose(float DeltaTime)
 	}
 }
 
+void AProjectileDefault_Grenade::InitProjectile(FProjectileInfo InitParam)
+{
+	Super::InitProjectile(InitParam);
+}
+
 void AProjectileDefault_Grenade::BulletCollisionSphereHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	Super::BulletCollisionSphereHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
+	ImpactProjectile();
+	if (ProjectileSettings.PreExploseSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ProjectileSettings.PreExploseSound, Hit.ImpactPoint);
+		ProjectileSettings.PreExploseSound = nullptr;
+	}
 }
 
 void AProjectileDefault_Grenade::ImpactProjectile()

@@ -5,6 +5,7 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/TPSInventoryComponent.h"
 
 // Sets default values
 AWeaponDefault::AWeaponDefault()
@@ -46,6 +47,7 @@ void AWeaponDefault::Tick(float DeltaTime)
 	DispersionTick(DeltaTime);
 	ShellDropTick(DeltaTime);
 	ClipDropTick(DeltaTime);
+
 	if (FireDelay <= 4.0f)
 	{
 		FireDelay += DeltaTime;
@@ -70,7 +72,7 @@ void AWeaponDefault::FireTick(float DeltaTime)
 	}
 	else
 	{
-		if (!WeaponReloading)
+		if (!WeaponReloading && CheckCanWeaponReload())
 		{
 			InitReload();
 		}
@@ -241,11 +243,11 @@ void AWeaponDefault::Fire()
 		}
 	}
 
-	OnWeaponFireStart.Broadcast(AnimToPlay);
-
 	FireTimer = WeaponSettings.RateOfFire;
 	WeaponInfo.Round--;
 	ChangeDispersionByShot();
+
+	OnWeaponFireStart.Broadcast(AnimToPlay);
 
 	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), WeaponSettings.SoundFireWeapon, ShootLocation->GetComponentLocation());
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WeaponSettings.EffectFireWeapon, ShootLocation->GetComponentTransform());
@@ -478,9 +480,86 @@ void AWeaponDefault::InitReload()
 void AWeaponDefault::FinishReload()
 {
 	WeaponReloading = false;
-	WeaponInfo.Round = WeaponSettings.MaxRound;
 
-	OnWeaponReloadEnd.Broadcast();
+	int8 AvailableAmmoFromInventory = GetAailableAmmoForReload();
+	int8 AmmoNeedTake;
+	int8 NeedToReload = WeaponSettings.MaxRound - WeaponInfo.Round;
+
+	if (NeedToReload > AvailableAmmoFromInventory)
+	{
+		WeaponInfo.Round = AvailableAmmoFromInventory;
+		AmmoNeedTake = AvailableAmmoFromInventory;
+	}
+	else
+	{
+		WeaponInfo.Round += NeedToReload;
+		AmmoNeedTake = NeedToReload;
+	}
+
+	/*
+	int8 AvailableAmmoFromInventroy = GetAailableAmmoForReload();
+	
+	if (AvailableAmmoFromInventroy > WeaponSettings.MaxRound)
+	{
+		AvailableAmmoFromInventroy = WeaponSettings.MaxRound;
+	}
+
+	int32 AmmoNeedTake = WeaponInfo.Round;
+	AmmoNeedTake -= AvailableAmmoFromInventroy;
+	WeaponInfo.Round = AvailableAmmoFromInventroy;
+	*/
+	OnWeaponReloadEnd.Broadcast(true, AmmoNeedTake);
+}
+
+void AWeaponDefault::CancelReload()
+{
+	WeaponReloading = false;
+	if (SkeletalMeshWeapon && SkeletalMeshWeapon->GetAnimInstance())
+	{
+		SkeletalMeshWeapon->GetAnimInstance()->StopAllMontages(0.11f);
+	}
+
+	OnWeaponReloadEnd.Broadcast(false, 0);
+	DropClipFlag = false;
+}
+
+bool AWeaponDefault::CheckCanWeaponReload()
+{
+	bool Result = true;
+	if (GetOwner())
+	{
+		UTPSInventoryComponent* MyInv = Cast<UTPSInventoryComponent>
+			(GetOwner()->GetComponentByClass(UTPSInventoryComponent::StaticClass()));
+		if (MyInv)
+		{
+			int8 AvailableAmmoForWeapon;
+			if (!MyInv->CheckAmmoForWeapon(WeaponSettings.WeaponType, AvailableAmmoForWeapon))
+			{
+				Result = false;
+			}
+		}
+	}
+
+	return Result;
+}
+
+int8 AWeaponDefault::GetAailableAmmoForReload()
+{
+	int8 AvailableAmmoForWeapon = WeaponSettings.MaxRound;
+	if (GetOwner())
+	{
+		UTPSInventoryComponent* MyInv = Cast<UTPSInventoryComponent>
+			(GetOwner()->GetComponentByClass(UTPSInventoryComponent::StaticClass()));
+		if (MyInv)
+		{
+			if (MyInv->CheckAmmoForWeapon(WeaponSettings.WeaponType, AvailableAmmoForWeapon))
+			{
+				AvailableAmmoForWeapon = AvailableAmmoForWeapon;
+			}
+		}
+	}
+
+	return AvailableAmmoForWeapon;
 }
 
 void AWeaponDefault::InitDropMesh(UStaticMesh* DropMesh, FTransform Offset, FVector DropImpulseDirection, float LifeTimeMesh, float ImpulseRandomDisperssion, float PowerImpulse, float CustomMass)

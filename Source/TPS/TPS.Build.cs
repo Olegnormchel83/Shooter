@@ -25,6 +25,7 @@ public class TPS : ModuleRules
 			"TPS/Character",
 			"TPS/FunctionLibrary",
 			"TPS/Game",
+			"TPS/Components",
 			"TPS/Weapons"
 		});
     }

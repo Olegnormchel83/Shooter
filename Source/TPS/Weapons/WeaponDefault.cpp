@@ -554,7 +554,7 @@ int8 AWeaponDefault::GetAailableAmmoForReload()
 		{
 			if (MyInv->CheckAmmoForWeapon(WeaponSettings.WeaponType, AvailableAmmoForWeapon))
 			{
-				AvailableAmmoForWeapon = AvailableAmmoForWeapon;
+				//AvailableAmmoForWeapon = AvailableAmmoForWeapon;
 			}
 		}
 	}

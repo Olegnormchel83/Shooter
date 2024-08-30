@@ -560,6 +560,12 @@ int8 AWeaponDefault::GetAailableAmmoForReload()
 	}
 
 	return AvailableAmmoForWeapon;
+
+	/*
+	maybe
+
+	return WeaponSettings.MaxRound ???
+	*/
 }
 
 void AWeaponDefault::InitDropMesh(UStaticMesh* DropMesh, FTransform Offset, FVector DropImpulseDirection, float LifeTimeMesh, float ImpulseRandomDisperssion, float PowerImpulse, float CustomMass)

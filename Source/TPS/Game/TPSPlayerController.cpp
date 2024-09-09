@@ -8,3 +8,10 @@ ATPSPlayerController::ATPSPlayerController()
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
 }
+
+void ATPSPlayerController::OnUnPossess()
+{
+	Super::OnUnPossess();
+
+
+}

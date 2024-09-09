@@ -10,6 +10,7 @@
 #include "TPSCharacter.generated.h"
 
 class UTPSInventoryComponent;
+class UTPSCharacterHealthComponent;
 
 UCLASS(Blueprintable)
 class ATPSCharacter : public ACharacter
@@ -20,6 +21,8 @@ protected:
 	virtual void BeginPlay() override;
 public:
 	ATPSCharacter();
+
+	FTimerHandle TimerHadle_RagdollTimer;
 
 	// Called every frame.
 	virtual void Tick(float DeltaSeconds) override;
@@ -82,6 +85,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Movement", meta = (ClampMin = "0", ClampMax = "100"))
 	float PlusStamina = 0.5f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+	bool bIsAlive = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+	TArray<UAnimMontage*>  DeadAnims;
+
 	AWeaponDefault* CurrentWeapon = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Demo")
@@ -94,6 +103,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UTPSInventoryComponent* InventoryComponent = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UTPSCharacterHealthComponent* HealthComponent = nullptr;
 
 	UFUNCTION(BlueprintCallable)
 	UDecalComponent* GetCursorToWorld();
@@ -171,5 +183,16 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void TrySwitchPreviousWeapon();
 
+	UFUNCTION()
+	void CharDead();
+
+	UFUNCTION()
+	void EnableRagdoll();
+
+	virtual float TakeDamage(
+		float DamageAmount, 
+		struct FDamageEvent const& DamageEvent, 
+		class AController* EventInstigator, 
+		AActor* DamageCauser) override;
 };
 

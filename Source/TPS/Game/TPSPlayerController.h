@@ -12,8 +12,8 @@ class ATPSPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
+
 	ATPSPlayerController();
 
+	virtual void OnUnPossess() override;
 };
-
-

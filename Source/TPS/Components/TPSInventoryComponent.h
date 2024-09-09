@@ -93,6 +93,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Interface")
 	void SaveItemToInventory();
 
+	UFUNCTION(BlueprintCallable)
+	void UpdateInventory(TArray<FWeaponSlot> Weapons);
+
 private:
 
 #pragma region SwitchWeaponInInventoryHelpFunctions

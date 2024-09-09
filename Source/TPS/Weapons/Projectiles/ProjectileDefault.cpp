@@ -25,9 +25,6 @@ AProjectileDefault::AProjectileDefault()
 	BulletFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Bullet FX"));
 	BulletFX->SetupAttachment(RootComponent);
 
-	//BulletSound = CreateDefaultSubobject<UAudioComponent>(TEXT("Bullet Audio"));
-	//BulletSound->SetupAttachment(RootComponent);
-
 	BulletProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("Bullet Projectile Movement"));
 	BulletProjectileMovement->UpdatedComponent = RootComponent;
 	BulletProjectileMovement->InitialSpeed = 1.f;
@@ -121,6 +118,9 @@ void AProjectileDefault::BulletCollisionSphereHit(UPrimitiveComponent* HitComp,
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ProjectileSettings.HitSound, Hit.ImpactPoint);
 		}
 	}
+
+	UGameplayStatics::ApplyPointDamage(OtherActor, ProjectileSettings.ProjectileDamage, Hit.TraceStart, Hit, GetInstigatorController(), this, NULL);
+
 	ImpactProjectile();
 }
 

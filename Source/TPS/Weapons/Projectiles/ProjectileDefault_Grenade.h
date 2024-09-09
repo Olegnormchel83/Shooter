@@ -38,4 +38,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Time to explose")
 	float TimeToExplose = 3.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UDamageType> DamageType;
+
 };

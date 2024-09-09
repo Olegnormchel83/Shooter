@@ -6,6 +6,7 @@
 #include "Components/DecalComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/TPSInventoryComponent.h"
+#include "Components/TPSCharacterHelathComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -46,6 +47,14 @@ ATPSCharacter::ATPSCharacter()
 	TopDownCameraComponent->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	InventoryComponent = CreateDefaultSubobject<UTPSInventoryComponent>(TEXT("InvenctoryComponent"));
+	HealthComponent = CreateDefaultSubobject<UTPSCharacterHealthComponent>(TEXT("HealthComponent"));
+
+	if (HealthComponent)
+	{
+		HealthComponent->OnDead.AddDynamic(this, &ATPSCharacter::CharDead);
+	}
+
+
 	if (InventoryComponent)
 	{
 		InventoryComponent->OnSwitchWeapon.AddDynamic(this, &ATPSCharacter::InitWeapon);
@@ -133,6 +142,8 @@ void ATPSCharacter::InputAttackReleased()
 
 void ATPSCharacter::MovementTick(float DeltaTime)
 {
+	if (!bIsAlive) return;
+
 	if (SprintRunEnabled && (AxisY != 0 || AxisX != 0))
 	{
 		AddMovementInput(GetActorForwardVector());
@@ -313,11 +324,7 @@ int32 ATPSCharacter::GetCurrentWeaponIndex()
 
 void ATPSCharacter::InitWeapon(FName IdWeapon, FAdditionalWeaponInfo AdditionalWeaponInfo, int32 NewCurrentIndexWeapon)
 {
-	if (CurrentWeapon) 
-	{
-		CurrentWeapon->Destroy();
-		CurrentWeapon = nullptr;
-	}
+	RemoveCurrentWeapon();
 
 	UTPSGameInstance* myGI = Cast<UTPSGameInstance>(GetGameInstance());
 	FWeaponInfo myWeaponInfo;
@@ -379,7 +386,11 @@ void ATPSCharacter::InitWeapon(FName IdWeapon, FAdditionalWeaponInfo AdditionalW
 
 void ATPSCharacter::RemoveCurrentWeapon()
 {
-
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->Destroy();
+		CurrentWeapon = nullptr;
+	}
 }
 
 
@@ -434,7 +445,6 @@ void ATPSCharacter::TryReloadWeapon()
 	}
 }
 
-
 void ATPSCharacter::TrySwitchNextWeapon()
 {
 	if (InventoryComponent->WeaponSlots.Num() > 1)
@@ -482,5 +492,46 @@ void ATPSCharacter::TrySwitchPreviousWeapon()
 
 			}
 		}
+	}
+}
+
+void ATPSCharacter::CharDead()
+{
+	int32 rnd = FMath::RandHelper(DeadAnims.Num());
+	float AnimTime = 0.0f;
+	if (DeadAnims.IsValidIndex(rnd) && DeadAnims[rnd] && GetMesh() && GetMesh()->GetAnimInstance())
+	{
+		AnimTime = DeadAnims[rnd]->GetPlayLength();
+		GetMesh()->GetAnimInstance()->Montage_Play(DeadAnims[rnd]);
+	}
+
+	bIsAlive = false;
+
+	UnPossessed();
+
+	//Timer ragdoll
+	GetWorldTimerManager().SetTimer(TimerHadle_RagdollTimer, this, &ATPSCharacter::EnableRagdoll, AnimTime, false);
+
+	GetCursorToWorld()->SetVisibility(false);
+}
+
+float ATPSCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	
+	if (bIsAlive)
+	{
+		HealthComponent->ChangeHealthValue(-DamageAmount);
+	}
+
+	return ActualDamage;
+}
+
+void ATPSCharacter::EnableRagdoll()
+{
+	if (GetMesh())
+	{
+		GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+		GetMesh()->SetSimulatePhysics(true);
 	}
 }

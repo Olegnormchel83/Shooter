@@ -325,6 +325,7 @@ void AWeaponDefault::Fire()
 								FTransform(Hit.ImpactNormal.Rotation(), Hit.ImpactPoint, FVector(2.0f)));
 						}
 					}
+					UGameplayStatics::ApplyPointDamage(Hit.GetActor(), WeaponSettings.WeaponDamage, Hit.TraceEnd, Hit, GetInstigatorController(), this, NULL);
 				}
 			}
 		}
@@ -496,18 +497,6 @@ void AWeaponDefault::FinishReload()
 		AmmoNeedTake = NeedToReload;
 	}
 
-	/*
-	int8 AvailableAmmoFromInventroy = GetAailableAmmoForReload();
-	
-	if (AvailableAmmoFromInventroy > WeaponSettings.MaxRound)
-	{
-		AvailableAmmoFromInventroy = WeaponSettings.MaxRound;
-	}
-
-	int32 AmmoNeedTake = WeaponInfo.Round;
-	AmmoNeedTake -= AvailableAmmoFromInventroy;
-	WeaponInfo.Round = AvailableAmmoFromInventroy;
-	*/
 	OnWeaponReloadEnd.Broadcast(true, AmmoNeedTake);
 }
 

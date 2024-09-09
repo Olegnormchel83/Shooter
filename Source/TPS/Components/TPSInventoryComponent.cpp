@@ -16,28 +16,8 @@ UTPSInventoryComponent::UTPSInventoryComponent()
 void UTPSInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	for (int8 i = 0; i < WeaponSlots.Num(); i++)
-	{
-		UTPSGameInstance* myGI = Cast<UTPSGameInstance>(GetWorld()->GetGameInstance());
-		if (myGI)
-		{
-			if (!WeaponSlots[i].NameItem.IsNone())
-			{
-				FWeaponInfo Info;
-				if (myGI->GetWeaponInfoByName(WeaponSlots[i].NameItem, Info))
-				{
-					WeaponSlots[i].AdditionalInfo.Round = Info.MaxRound;
-				}
-				else
-				{
-					//WeaponSlots.RemoveAt(i);
-					//i--;
-				}
-			}
-		}
-	}
-	
+
+	UpdateInventory(WeaponSlots);
 
 	MaxSlotsWeapon = WeaponSlots.Num();
 
@@ -77,27 +57,24 @@ bool UTPSInventoryComponent::SwitchWeaponToIndex(int32 ChangeToIndex, int32 OldI
 	FAdditionalWeaponInfo NewAdditionalWeaponInfo;
 	int32 NewCurrentIndex = 0;
 
-	if (WeaponSlots.IsValidIndex(CorrectIndex))
+	if (WeaponSlots.IsValidIndex(CorrectIndex) && !WeaponSlots[CorrectIndex].NameItem.IsNone())
 	{
-		if (!WeaponSlots[CorrectIndex].NameItem.IsNone())
+		UTPSGameInstance* myGI = Cast<UTPSGameInstance>(GetWorld()->GetGameInstance());
+		if (myGI)
 		{
-			UTPSGameInstance* myGI = Cast<UTPSGameInstance>(GetWorld()->GetGameInstance());
-			if (myGI)
-			{
-				FWeaponInfo myInfo;
-				myGI->GetWeaponInfoByName(WeaponSlots[CorrectIndex].NameItem, myInfo);
+			FWeaponInfo myInfo;
+			myGI->GetWeaponInfoByName(WeaponSlots[CorrectIndex].NameItem, myInfo);
 
-				bool bIsFind = false;
-				int8 j = 0;
-				while (j < AmmoSlots.Num() && !bIsFind)
+			bool bIsFind = false;
+			int8 j = 0;
+			while (j < AmmoSlots.Num() && !bIsFind)
+			{
+				if (AmmoSlots[j].WeaponType == myInfo.WeaponType)
 				{
-					if (AmmoSlots[j].WeaponType == myInfo.WeaponType)
-					{
-						bIsSuccess = true;
-						bIsFind = true;
-					}
-					j++;
+					bIsSuccess = true;
+					bIsFind = true;
 				}
+				j++;
 			}
 		}
 
@@ -114,19 +91,19 @@ bool UTPSInventoryComponent::SwitchWeaponToIndex(int32 ChangeToIndex, int32 OldI
 		if (bIsForward)
 		{
 			ForwardSwitch(
-				bIsSuccess, 
-				ChangeToIndex, 
-				NewIdWeapon, 
-				NewAdditionalWeaponInfo, 
+				bIsSuccess,
+				ChangeToIndex,
+				NewIdWeapon,
+				NewAdditionalWeaponInfo,
 				NewCurrentIndex);
 		}
 		else
 		{
 			PreviousSwitch(
-				bIsSuccess, 
-				ChangeToIndex, 
-				NewIdWeapon, 
-				NewAdditionalWeaponInfo, 
+				bIsSuccess,
+				ChangeToIndex,
+				NewIdWeapon,
+				NewAdditionalWeaponInfo,
 				NewCurrentIndex);
 		}
 	}
@@ -134,6 +111,9 @@ bool UTPSInventoryComponent::SwitchWeaponToIndex(int32 ChangeToIndex, int32 OldI
 	if (bIsSuccess)
 	{
 		UE_LOG(LogTemp, Display, TEXT("Weapon Switched In Inventory"));
+		UE_LOG(LogTemp, Display, TEXT("Old Index: %i"), OldIndex);
+		UE_LOG(LogTemp, Display, TEXT("New Index: %i"), NewCurrentIndex);
+		UE_LOG(LogTemp, Display, TEXT("Current Weapon Name: %s"), *WeaponSlots[NewCurrentIndex].NameItem.ToString());
 		SetAdditionalInfoWeapon(OldIndex, OldInfo);
 		OnSwitchWeapon.Broadcast(NewIdWeapon, NewAdditionalWeaponInfo, NewCurrentIndex);
 		OnSwitchWeaponInInventory.Broadcast(NewCurrentIndex);
@@ -368,13 +348,33 @@ bool UTPSInventoryComponent::GetDropItemInfoFromInventory(int32 IndexSlot, FDrop
 
 void UTPSInventoryComponent::SaveItemToInventory()
 {
+}
 
+
+void UTPSInventoryComponent::UpdateInventory(TArray<FWeaponSlot> Weapons)
+{
+	for (int8 i = 0; i < WeaponSlots.Num(); i++)
+	{
+		UTPSGameInstance* myGI = Cast<UTPSGameInstance>(GetWorld()->GetGameInstance());
+		if (myGI)
+		{
+			if (!WeaponSlots[i].NameItem.IsNone())
+			{
+				FWeaponInfo Info;
+				if (myGI->GetWeaponInfoByName(WeaponSlots[i].NameItem, Info))
+				{
+					WeaponSlots[i].AdditionalInfo.Round = Info.MaxRound;
+				}
+			}
+			
+		}
+	}
 }
 
 void UTPSInventoryComponent::SelectNewWeapon
-(int8 tmpIndex, 
-	bool bIsSuccess, 
-	FName NewIdWeapon, 
+(int8 tmpIndex,
+	bool bIsSuccess,
+	FName NewIdWeapon,
 	FAdditionalWeaponInfo NewAdditionalWeaponInfo,
 	int32 NewCurrentIndex)
 {
@@ -390,32 +390,29 @@ void UTPSInventoryComponent::SelectNewWeapon
 		}
 	}
 
-	if (WeaponSlots[tmpIndex].NameItem != "None")
-	{
-		FWeaponInfo myInfo;
-		UTPSGameInstance* myGI = Cast<UTPSGameInstance>(GetWorld()->GetGameInstance());
-		myGI->GetWeaponInfoByName(WeaponSlots[tmpIndex].NameItem, myInfo);
+	FWeaponInfo myInfo;
+	UTPSGameInstance* myGI = Cast<UTPSGameInstance>(GetWorld()->GetGameInstance());
+	myGI->GetWeaponInfoByName(WeaponSlots[tmpIndex].NameItem, myInfo);
 
-		bool bIsFind = false;
-		int8 j = 0;
-		while (j < AmmoSlots.Num() && !bIsFind)
+	bool bIsFind = false;
+	int8 j = 0;
+	while (j < AmmoSlots.Num() && !bIsFind)
+	{
+		if (AmmoSlots[j].WeaponType == myInfo.WeaponType)
 		{
-			if (AmmoSlots[j].WeaponType == myInfo.WeaponType)
-			{
-				bIsSuccess = true;
-				NewIdWeapon = WeaponSlots[tmpIndex].NameItem;
-				NewAdditionalWeaponInfo = WeaponSlots[tmpIndex].AdditionalInfo;
-				NewCurrentIndex = tmpIndex;
-				bIsFind = true;
-			}
-			j++;
+			bIsSuccess = true;
+			NewIdWeapon = WeaponSlots[tmpIndex].NameItem;
+			NewAdditionalWeaponInfo = WeaponSlots[tmpIndex].AdditionalInfo;
+			NewCurrentIndex = tmpIndex;
+			bIsFind = true;
 		}
+		j++;
 	}
 }
 
 void UTPSInventoryComponent::ForwardSwitch(
-	bool bIsSuccess, 
-	int32 ChangeToIndex, 
+	bool bIsSuccess,
+	int32 ChangeToIndex,
 	FName NewIdWeapon,
 	FAdditionalWeaponInfo NewAdditionalWeaponInfo,
 	int32 NewCurrentIndex)
@@ -426,15 +423,15 @@ void UTPSInventoryComponent::ForwardSwitch(
 	{
 		iteration++;
 		int8 tmpIndex = ChangeToIndex + iteration;
-		if (WeaponSlots.IsValidIndex(tmpIndex))
+		if (WeaponSlots.IsValidIndex(tmpIndex) && !WeaponSlots[tmpIndex].NameItem.IsNone())
 		{
 			SelectNewWeapon(tmpIndex, bIsSuccess, NewIdWeapon, NewAdditionalWeaponInfo, NewCurrentIndex);
 		}
 		else
 		{
-			if (WeaponSlots.IsValidIndex(Seconditeration))
+			if (WeaponSlots.IsValidIndex(Seconditeration) && !WeaponSlots[Seconditeration].NameItem.IsNone())
 			{
-				SelectNewWeapon(tmpIndex, bIsSuccess, NewIdWeapon, NewAdditionalWeaponInfo, NewCurrentIndex);
+				SelectNewWeapon(Seconditeration, bIsSuccess, NewIdWeapon, NewAdditionalWeaponInfo, NewCurrentIndex);
 			}
 			Seconditeration++;
 		}
@@ -454,15 +451,15 @@ void UTPSInventoryComponent::PreviousSwitch(
 	{
 		iteration++;
 		int8 tmpIndex = ChangeToIndex - iteration;
-		if (WeaponSlots.IsValidIndex(tmpIndex))
+		if (WeaponSlots.IsValidIndex(tmpIndex) && !WeaponSlots[tmpIndex].NameItem.IsNone())
 		{
 			SelectNewWeapon(tmpIndex, bIsSuccess, NewIdWeapon, NewAdditionalWeaponInfo, NewCurrentIndex);
 		}
 		else
 		{
-			if (WeaponSlots.IsValidIndex(Seconditeration))
+			if (WeaponSlots.IsValidIndex(Seconditeration) && !WeaponSlots[Seconditeration].NameItem.IsNone())
 			{
-				SelectNewWeapon(tmpIndex, bIsSuccess, NewIdWeapon, NewAdditionalWeaponInfo, NewCurrentIndex);
+				SelectNewWeapon(Seconditeration, bIsSuccess, NewIdWeapon, NewAdditionalWeaponInfo, NewCurrentIndex);
 			}
 			Seconditeration--;
 		}

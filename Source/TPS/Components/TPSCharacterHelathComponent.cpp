@@ -3,12 +3,18 @@
 
 #include "Components/TPSCharacterHelathComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "TPSCharacter.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogTPSCharacterHelathComponent, All, All);
 
 void UTPSCharacterHealthComponent::ChangeHealthValue(float ChangeValue)
 {	
 	if (!GetWorld()) return;
+
+	const auto Player = Cast<ATPSCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+	if (!Player) return;
+
+	if (!Player->bIsAlive) return;
 
 	float CurrentDamage = ChangeValue * CoefDamage;
 
@@ -20,7 +26,17 @@ void UTPSCharacterHealthComponent::ChangeHealthValue(float ChangeValue)
 			if (ShieldDestroyedFX) // && SoundShieldDestroyed??? 
 			{
 				//FX
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ShieldDestroyedFX, FTransform());
+				UGameplayStatics::SpawnEmitterAttached(
+					ShieldDestroyedFX,
+					Player->GetMesh(),
+					ShieldFXSocketName,
+					FVector::ZeroVector,
+					FRotator::ZeroRotator,
+					EAttachLocation::SnapToTarget);
+			}
+			else
+			{
+				UE_LOG(LogTPSCharacterHelathComponent, Display, TEXT("ShieldDestroyedFX is NONE"));
 			}
 
 			UE_LOG(LogTPSCharacterHelathComponent, Display, TEXT("UTPSCharacterHealthComponent::ChangeHealthValue - Shield Destroyed"));
@@ -42,6 +58,11 @@ void UTPSCharacterHealthComponent::ChangeShieldValue(float ChangeValue)
 {
 	if (!GetWorld()) return;
 
+	const auto Player = Cast<ATPSCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+	if (!Player) return;
+
+	if (!Player->bIsAlive) return;
+
 	Shield += ChangeValue;
 
 	OnShieldChanged.Broadcast(Shield, ChangeValue);
@@ -51,7 +72,17 @@ void UTPSCharacterHealthComponent::ChangeShieldValue(float ChangeValue)
 		UE_LOG(LogTPSCharacterHelathComponent, Display, TEXT("UTPSCharacterHealthComponent::ChangeShieldValue - Shield Damaged"));
 		if (ShieldDamagedFX)
 		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ShieldDamagedFX, FTransform());
+			UGameplayStatics::SpawnEmitterAttached(
+				ShieldDamagedFX, 
+				Player->GetMesh(), 
+				ShieldFXSocketName, 
+				FVector::ZeroVector, 
+				FRotator::ZeroRotator, 
+				EAttachLocation::SnapToTarget);
+		}
+		else
+		{
+			UE_LOG(LogTPSCharacterHelathComponent, Display, TEXT("ShieldDamagedFX is NONE"));
 		}
 	}
 
@@ -79,6 +110,11 @@ void UTPSCharacterHealthComponent::ChangeShieldValue(float ChangeValue)
 void UTPSCharacterHealthComponent::CooldownShieldEnd()
 {
 	if (!GetWorld()) return;
+
+	const auto Player = Cast<ATPSCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+	if (!Player) return;
+
+	if (!Player->bIsAlive) return;
 	
 	GetWorld()->GetTimerManager().SetTimer(
 			TimerHadle_ShieldRecoveryRateTimer,
@@ -92,6 +128,11 @@ void UTPSCharacterHealthComponent::CooldownShieldEnd()
 void UTPSCharacterHealthComponent::RecoveryShield()
 {
 	if (!GetWorld()) return;
+
+	const auto Player = Cast<ATPSCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+	if (!Player) return;
+
+	if (!Player->bIsAlive) return;
 
 	float tmp = Shield;
 	tmp += ShieldRecoverValue;

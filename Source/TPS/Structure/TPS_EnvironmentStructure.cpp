@@ -25,6 +25,11 @@ void ATPS_EnvironmentStructure::Tick(float DeltaTime)
 
 }
 
+FVector ATPS_EnvironmentStructure::GetParticleOffset()
+{
+	return ParticleOffset;
+}
+
 EPhysicalSurface ATPS_EnvironmentStructure::GetSurfaceType()
 {
 	EPhysicalSurface Result = EPhysicalSurface::SurfaceType_Default;

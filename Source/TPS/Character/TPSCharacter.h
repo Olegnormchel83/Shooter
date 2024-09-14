@@ -5,12 +5,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Types.h"
-#include "Weapons/WeaponDefault.h"
 #include "Interfaces/TPS_IGameActor.h"
 #include "StateEffects/TPS_StateEffect.h"
 
 #include "TPSCharacter.generated.h"
 
+class AWeaponDefault;
 class UTPSInventoryComponent;
 class UTPSCharacterHealthComponent;
 
@@ -48,172 +48,207 @@ private:
 	class USpringArmComponent* CameraBoom;
 
 public:
+
+#pragma region Cursor
+
+	//VARIABLES
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
 	UMaterialInterface* CursorMaterial = nullptr;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
 	FVector CursorSize = FVector(20.0f, 40.0f, 40.0f);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	EMovementState MovementState = EMovementState::Run_State;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	FCharacterSpeed MovementSpeedInfo;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	bool Stunned = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	bool SprintRunEnabled = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	bool WalkEnabled = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	bool AimEnabled = false;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
-	float StaminaPoints = 100.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float CurrentStamina = StaminaPoints;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Movement")
-	float MinusStamina = 1.0f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Movement", meta = (ClampMin = "0", ClampMax = "100"))
-	float PlusStamina = 0.5f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
-	bool bIsAlive = true;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
-	TArray<UAnimMontage*>  DeadAnims;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
-	UAnimMontage* StunAnimation = nullptr;
-
-	AWeaponDefault* CurrentWeapon = nullptr;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Demo")
-	FName InitWeaponName;
-
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
-	int32 CurrentIndexWeapon = 0;
-
 	UDecalComponent* CurrentCursor = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UTPSInventoryComponent* InventoryComponent = nullptr;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UTPSCharacterHealthComponent* HealthComponent = nullptr;
+	//FUNCTIONS
 
 	UFUNCTION(BlueprintCallable)
 	UDecalComponent* GetCursorToWorld();
 
-	TArray<UTPS_StateEffect*> Effects;
+#pragma endregion
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
-	TSubclassOf<UTPS_StateEffect> AbilityEffect;
+#pragma region Movement
 
-	UFUNCTION()
-	void InputAxisY(float Value);
+	//VARIABLES
 
-	UFUNCTION()
-	void InputAxisX(float Value);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	EMovementState MovementState = EMovementState::Run_State;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	FCharacterSpeed MovementSpeedInfo;
 
-	UFUNCTION()
-	void InputAttackPressed();
-
-	UFUNCTION()
-	void InputAttackReleased();
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+	float StaminaPoints = 100.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float CurrentStamina = StaminaPoints;
+	UPROPERTY(EditDefaultsOnly, Category = "Movement")
+	float MinusStamina = 1.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Movement", meta = (ClampMin = "0", ClampMax = "100"))
+	float PlusStamina = 0.5f;
 
 	float AxisX = 0.0f;
 	float AxisY = 0.0f;
 
-	//TickFunction
-	UFUNCTION()
-	void MovementTick(float DeltaTime);
+	//flags
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool Stunned = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool SprintRunEnabled = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool WalkEnabled = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool AimEnabled = false;
+
+	//FUNCTIONS
 
 	UFUNCTION(BlueprintCallable)
 	void CharacterUpdate();
-
 	UFUNCTION(BlueprintCallable)
 	void ChangeMovementState();
-
 	UFUNCTION(BlueprintCallable)
 	void DecreaseStamina();
-
 	UFUNCTION(BlueprintCallable)
 	void IncreaseStamina();
 
-	UFUNCTION(BlueprintCallable)
-	void AttackCharEvent(bool bIsFiring);
-
-	UFUNCTION(BlueprintCallable)
-	AWeaponDefault* GetCurrentWeapon();
-
-	UFUNCTION(BlueprintCallable)
-	int32 GetCurrentWeaponIndex();
-
-	UFUNCTION(BlueprintCallable)
-	void InitWeapon(FName IdWepaon, FAdditionalWeaponInfo AdditionalWeaponInfo, int32 NewCurrentIndexWeapon);
-
-	UFUNCTION(BlueprintCallable)
-	void RemoveCurrentWeapon();
-
-	UFUNCTION(BlueprintCallable)
-	void TryReloadWeapon();
-
 	UFUNCTION()
-	void WeaponReloadStart(UAnimMontage* Anim);
-
+	void InputAxisY(float Value);
 	UFUNCTION()
-	void WeaponReloadEnd(bool bIsSuccess, int32 AmmoTake);
-
-	UFUNCTION(BlueprintNativeEvent)
-	void WeaponReloadStart_BP(UAnimMontage* Anim);
-
-	UFUNCTION(BlueprintNativeEvent)
-	void WeaponReloadEnd_BP(bool bIsSuccess);
-
+	void InputAxisX(float Value);
 	UFUNCTION()
-	void CharFire(UAnimMontage* Anim);
+	void MovementTick(float DeltaTime);
+	
 
-	UFUNCTION(BlueprintNativeEvent)
-	void CharFire_BP(UAnimMontage* Anim);
+#pragma endregion
 
-	UFUNCTION(BlueprintCallable)
-	void TrySwitchNextWeapon();
+#pragma region Health
 
-	UFUNCTION(BlueprintCallable)
-	void TrySwitchPreviousWeapon();
+	//VARIABLES
 
-	void TryAbilityEnabled();
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UTPSCharacterHealthComponent* HealthComponent = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+	TArray<UAnimMontage*>  DeadAnims;
+
+	//flags
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+	bool bIsAlive = true;
+
+	//FUNCTIONS
 
 	UFUNCTION()
 	void CharDead();
+	UFUNCTION()
+	void EnableRagdoll();
+
+	virtual float TakeDamage(
+		float DamageAmount,
+		struct FDamageEvent const& DamageEvent,
+		class AController* EventInstigator,
+		AActor* DamageCauser) override;
+
+#pragma endregion
+
+#pragma region Inventory
+
+	//VARIABLES
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UTPSInventoryComponent* InventoryComponent = nullptr;
+	
+	//FUNCTIONS
+
+	UFUNCTION(BlueprintCallable)
+	void TrySwitchNextWeapon();
+	UFUNCTION(BlueprintCallable)
+	void TrySwitchPreviousWeapon();
+
+#pragma endregion
+
+#pragma region Weapon
+
+	//VARIABLES
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Demo")
+	FName InitWeaponName;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	int32 CurrentIndexWeapon = 0;
+
+	AWeaponDefault* CurrentWeapon = nullptr;
+
+	//FUNCTIONS
+
+	UFUNCTION(BlueprintCallable)
+	void InitWeapon(
+		FName IdWepaon, 
+		FAdditionalWeaponInfo AdditionalWeaponInfo, 
+		int32 NewCurrentIndexWeapon);
+
+	UFUNCTION(BlueprintCallable)
+	void RemoveCurrentWeapon();
+	UFUNCTION(BlueprintCallable)
+	void TryReloadWeapon();
+	UFUNCTION(BlueprintCallable)
+	AWeaponDefault* GetCurrentWeapon();
+	UFUNCTION(BlueprintCallable)
+	int32 GetCurrentWeaponIndex();
+	UFUNCTION(BlueprintCallable)
+	void AttackCharEvent(bool bIsFiring);
+
+	UFUNCTION(BlueprintNativeEvent)
+	void WeaponReloadStart_BP(UAnimMontage* Anim);
+	UFUNCTION(BlueprintNativeEvent)
+	void WeaponReloadEnd_BP(bool bIsSuccess);
+	UFUNCTION(BlueprintNativeEvent)
+	void CharFire_BP(UAnimMontage* Anim);
+
+	UFUNCTION()
+	void WeaponReloadStart(UAnimMontage* Anim);
+	UFUNCTION()
+	void WeaponReloadEnd(bool bIsSuccess, int32 AmmoTake);
+	UFUNCTION()
+	void InputAttackPressed();
+	UFUNCTION()
+	void InputAttackReleased();
+	UFUNCTION()
+	void CharFire(UAnimMontage* Anim);
+
+#pragma endregion
+
+#pragma region StateEffects
+
+	//VARIABLES
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+	UAnimMontage* StunAnimation = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
+	TSubclassOf<UTPS_StateEffect> AbilityEffect;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+	FVector ParticleOffset = FVector(0.0f, 0.0f, 100.0f);
+
+	TArray<UTPS_StateEffect*> Effects;
+
+	//FUNCTIONS
 
 	UFUNCTION()
 	void GetStun();
 	UFUNCTION()
 	void StunOut();
 
-	UFUNCTION()
-	void EnableRagdoll();
+	void TryAbilityEnabled();
 
-	virtual float TakeDamage(
-		float DamageAmount, 
-		struct FDamageEvent const& DamageEvent, 
-		class AController* EventInstigator, 
-		AActor* DamageCauser) override;
+#pragma endregion
 
-	//Interface
+#pragma region Interface
+
+	//FUNCTIONS
+
+	FVector GetParticleOffset() override;
 	EPhysicalSurface GetSurfaceType() override;
 	TArray<UTPS_StateEffect*> GetAllCurrentEffects() override;
 	void RemoveEffect(UTPS_StateEffect* RemovedEffect) override;
 	void AddEffect(UTPS_StateEffect* NewEffect) override;
-	//End Interface
+
+#pragma endregion
 
 };

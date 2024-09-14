@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "StateEffects/TPS_StateEffect.h"
 #include "Components/TPSHelathComponent.h"
 #include "Interfaces/TPS_IGameActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "TPSCharacter.h"
+#include "Structure/TPS_EnvironmentStructure.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(StateEffectLog, All, All);
@@ -22,7 +22,6 @@ bool UTPS_StateEffect::InitObject(AActor* Actor)
 
 	return true;
 }
-
 
 void UTPS_StateEffect::DestroyObject()
 {
@@ -71,31 +70,48 @@ bool UTPS_StateEffect_ExecuteTimer::InitObject(AActor* Actor)
 	Super::InitObject(Actor);
 
 	GetWorld()->GetTimerManager().SetTimer(
-		TimerHandle_EffectTimer, 
-		this, 
-		&UTPS_StateEffect_ExecuteTimer::DestroyObject, 
-		Timer, 
+		TimerHandle_EffectTimer,
+		this,
+		&UTPS_StateEffect_ExecuteTimer::DestroyObject,
+		Timer,
 		false);
 	GetWorld()->GetTimerManager().SetTimer(
-		TimerHandle_ExecuteTimer, 
-		this, 
-		&UTPS_StateEffect_ExecuteTimer::Execute, 
-		RateTime, 
+		TimerHandle_ExecuteTimer,
+		this,
+		&UTPS_StateEffect_ExecuteTimer::Execute,
+		RateTime,
 		true);
 
 	if (ParticleEffect)
 	{
-		//TODO: For object with interface create func that return offset, Name Bones
-		FName NameBoneToAttached;
 		FVector Loc = FVector(FVector::ZeroVector);
 
+		auto Character = Cast<ACharacter>(myActor);
+		if (Character)
+		{
+			Loc = FVector(FVector::ZeroVector);
+		}
+
+		auto Player = Cast<ATPSCharacter>(myActor);
+		if (Player)
+		{
+			Loc = Player->GetParticleOffset();
+		}
+
+		auto Environment = Cast<ATPS_EnvironmentStructure>(myActor);
+		if (Environment)
+		{
+			Loc = Environment->GetParticleOffset();
+		}
+
+		FName NameBoneToAttached;
 		ParticleEmmiter = UGameplayStatics::SpawnEmitterAttached(
-			ParticleEffect, 
-			myActor->GetRootComponent(), 
-			NameBoneToAttached, 
-			Loc, 
-			FRotator::ZeroRotator, 
-			EAttachLocation::SnapToTarget, 
+			ParticleEffect,
+			myActor->GetRootComponent(),
+			NameBoneToAttached,
+			Loc,
+			FRotator::ZeroRotator,
+			EAttachLocation::SnapToTarget,
 			false);
 	}
 
@@ -135,8 +151,7 @@ void UTPS_StateEffect_DisableInput::DestroyObject()
 		auto Character = Cast<ACharacter>(myActor);
 		if (Character)
 		{
-			Character->StopAnimMontage(StunAnimation);
-			Character->GetCharacterMovement()->MaxWalkSpeed = 600;	
+			Character->GetCharacterMovement()->MaxWalkSpeed = 600;
 		}
 	}
 
@@ -157,21 +172,18 @@ void UTPS_StateEffect_DisableInput::ChangeCharacterInputStatus(bool bStatus)
 
 	if (!Character || !Player) return;
 
-	if (StunAnimation)
+	if (Character && !bStatus && !CharacterStunned)
 	{
-		if (Character && !bStatus && !CharacterStunned)
-		{
-			UE_LOG(StateEffectLog, Display, TEXT("Character Get Stun"));
+		//UE_LOG(StateEffectLog, Display, TEXT("Character Get Stun"));
 
-			Player->GetStun();
-			CharacterStunned = true;
-		}
-		else if (Character && bStatus && CharacterStunned)
-		{
-			UE_LOG(StateEffectLog, Display, TEXT("Character Back"));
+		Player->GetStun();
+		CharacterStunned = true;
+	}
+	else if (Character && bStatus && CharacterStunned)
+	{
+		//UE_LOG(StateEffectLog, Display, TEXT("Character Back"));
 
-			Player->StunOut();
-			CharacterStunned = false;
-		}
+		Player->StunOut();
+		CharacterStunned = false;
 	}
 }

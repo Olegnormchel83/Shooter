@@ -26,6 +26,8 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
+	FVector GetParticleOffset() override;
+
 	EPhysicalSurface GetSurfaceType() override;
 
 	TArray<UTPS_StateEffect*> GetAllCurrentEffects() override;
@@ -35,5 +37,8 @@ public:
 	//Effects
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	TArray<UTPS_StateEffect*> Effects;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	FVector ParticleOffset = FVector(FVector::ZeroVector);
 
 };

@@ -9,6 +9,7 @@
 
 #include "TPS_StateEffect.generated.h"
 
+
 /**
  * 
  */
@@ -29,6 +30,7 @@ public:
 	bool bIsStakable = false;
 
 	AActor* myActor = nullptr;
+
 };
 
 UCLASS()
@@ -85,9 +87,6 @@ public:
 
 	virtual void DestroyObject() override;
 	virtual void Execute() override;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Animation")
-	UAnimMontage* StunAnimation = nullptr;
 
 	bool CharacterStunned = false;
 

@@ -34,6 +34,8 @@ public:
 	virtual bool AvailableForEffectsOnlyCPP();
 	*/
 
+	virtual FVector GetParticleOffset();
+
 	virtual EPhysicalSurface GetSurfaceType();
 
 	virtual TArray<UTPS_StateEffect*> GetAllCurrentEffects();

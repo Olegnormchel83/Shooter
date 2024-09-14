@@ -215,33 +215,33 @@ void ATPSCharacter::CharacterUpdate()
 	{
 	case EMovementState::Aim_State:
 		ResSpeed = MovementSpeedInfo.AimSpeedNormal;
-		UE_LOG(CharacterLog, Display, TEXT("Character State - Aim"));
+		//UE_LOG(CharacterLog, Display, TEXT("Character State - Aim"));
 		break;
 	case EMovementState::AimWalk_State:
 		ResSpeed = MovementSpeedInfo.AimSpeedWalk;
-		UE_LOG(CharacterLog, Display, TEXT("Character State - AimWalk"));
+		//UE_LOG(CharacterLog, Display, TEXT("Character State - AimWalk"));
 		break;
 	case EMovementState::Walk_State:
 		ResSpeed = MovementSpeedInfo.WalkSpeedNormal;
-		UE_LOG(CharacterLog, Display, TEXT("Character State - Walk"));
+		//UE_LOG(CharacterLog, Display, TEXT("Character State - Walk"));
 		break;
 	case EMovementState::Run_State:
 		ResSpeed = MovementSpeedInfo.RunSpeedNormal;
-		UE_LOG(CharacterLog, Display, TEXT("Character State - Run"));
+		//UE_LOG(CharacterLog, Display, TEXT("Character State - Run"));
 		break;
 	case EMovementState::SprintRun_State:
 		ResSpeed = MovementSpeedInfo.SprintRunSpeedRun;
-		UE_LOG(CharacterLog, Display, TEXT("Character State - Sprint"));
+		//UE_LOG(CharacterLog, Display, TEXT("Character State - Sprint"));
 		break;
 	case EMovementState::Stun_State:
 		ResSpeed = MovementSpeedInfo.StunStateSpeed;
-		UE_LOG(CharacterLog, Display, TEXT("Character State - Stun"));
+		//UE_LOG(CharacterLog, Display, TEXT("Character State - Stun"));
 	default:
 		break;
 	}
 
 	GetCharacterMovement()->MaxWalkSpeed = ResSpeed;
-	UE_LOG(CharacterLog, Display, TEXT("Character Speed - %.1f"), ResSpeed);
+	//UE_LOG(CharacterLog, Display, TEXT("Character Speed - %.1f"), ResSpeed);
 }
 
 void ATPSCharacter::ChangeMovementState()
@@ -613,8 +613,14 @@ void ATPSCharacter::StunOut()
 {
 	Stunned = false;
 
+	StopAnimMontage(StunAnimation);
 	ChangeMovementState();
 	EnableInput(Cast<APlayerController>(GetController()));
+}
+
+FVector ATPSCharacter::GetParticleOffset()
+{
+	return ParticleOffset;
 }
 
 EPhysicalSurface ATPSCharacter::GetSurfaceType()

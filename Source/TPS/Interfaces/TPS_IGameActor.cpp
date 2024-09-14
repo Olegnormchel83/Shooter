@@ -5,6 +5,11 @@
 
 // Add default functionality here for any ITPS_IGameActor functions that are not pure virtual.
 
+FVector ITPS_IGameActor::GetParticleOffset()
+{
+	return FVector(FVector::ZeroVector);
+}
+
 EPhysicalSurface ITPS_IGameActor::GetSurfaceType()
 {
 	return EPhysicalSurface::SurfaceType_Default;

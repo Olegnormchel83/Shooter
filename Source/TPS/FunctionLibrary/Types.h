@@ -4,6 +4,7 @@
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Engine/DataTable.h"
+#include "StateEffects/TPS_StateEffect.h"
 
 #include "Types.generated.h"
 
@@ -16,7 +17,8 @@ enum class EMovementState : uint8
 	AimWalk_State UMETA(DisplayName = "AimWalk State"),
 	Walk_State UMETA(DisplayName = "Walk State"),
 	Run_State UMETA(DisplayName = "Run State"),
-	SprintRun_State UMETA(DisplayName = "SprintRun State")
+	SprintRun_State UMETA(DisplayName = "SprintRun State"),
+	Stun_State UMETA(DisplayName = "Stun State")
 };
 
 UENUM(BlueprintType)
@@ -26,8 +28,7 @@ enum class EWeaponType : uint8
 	ShotgunType UMETA(DisplayName = "Shotgun"),
 	SniperType UMETA(DisplayName = "SniperRifle"),
 	GrenadeLauncherType UMETA(DisplayName = "GrenadeLauncher"),
-	RocketLauncherType UMETA(DisplayName = "RocketLauncher"),
-	NoneType UMETA(DisplayName = "None")
+	RocketLauncherType UMETA(DisplayName = "RocketLauncher")
 };
 
 USTRUCT(BlueprintType)
@@ -49,6 +50,10 @@ struct FCharacterSpeed
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float SprintRunSpeedRun = 800.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float StunStateSpeed = 0.0f;
+
 };
 
 USTRUCT(BlueprintType)
@@ -88,6 +93,9 @@ struct FProjectileInfo
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FX")
 	USoundBase* HitSound = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect")
+	TSubclassOf<UTPS_StateEffect> Effect = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explode")
 	UParticleSystem* ExploseFX = nullptr;
@@ -347,4 +355,12 @@ UCLASS()
 class TPS_API UTypes : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintCallable)
+	static void AddEffectBySurfaceType(
+		AActor* TakeEffectActor, 
+		TSubclassOf<UTPS_StateEffect> AddEffectClass, 
+		EPhysicalSurface SurfaceType);
 };

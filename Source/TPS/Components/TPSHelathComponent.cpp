@@ -8,6 +8,7 @@ UTPSHealthComponent::UTPSHealthComponent()
 
 	PrimaryComponentTick.bCanEverTick = true;
 
+	Health = MaxHealth;
 }
 
 
@@ -29,6 +30,11 @@ float UTPSHealthComponent::GetCurrentHealth()
 	return Health;
 }
 
+float UTPSHealthComponent::GetMaxHealth()
+{
+	return MaxHealth;
+}
+
 void UTPSHealthComponent::SetCurrentHealth(float NewHealth)
 {
 	Health = NewHealth;
@@ -38,24 +44,27 @@ void UTPSHealthComponent::ChangeHealthValue(float ChangeValue)
 {
 	ChangeValue *= CoefDamage;
 
-	Health += ChangeValue;
+	float tmp = Health + ChangeValue;
+	if (tmp > MaxHealth)
+	{
+		Health = MaxHealth;
+	}
+
+	if (tmp > 0 && tmp <= MaxHealth)
+	{
+		Health = tmp;
+	}
+
 	OnHealthChanged.Broadcast(Health, ChangeValue);
 
-	if (Health > 100.0f)
+	if (tmp <= 0)
 	{
-		Health = 100.0f;
+		OnDead.Broadcast();
 	}
-	else
-	{
-		if (Health <= 0.0f)
-		{
-			OnDead.Broadcast();
-		}
-	}
+
 	
-	/*
-	UE_LOG(LogTemp, Display, TEXT("Current Health: %0.1f"), GetCurrentHealth());
-	UE_LOG(LogTemp, Display, TEXT("Recieved Damage: %0.1f"), -ChangeValue);
-	*/
+	UE_LOG(LogTemp, Display, TEXT("Current HP: %0.1f"), GetCurrentHealth());
+	UE_LOG(LogTemp, Display, TEXT("Changed HP: %0.1f"), ChangeValue);
+	
 	
 }

@@ -37,6 +37,7 @@ public:
 	class UAudioComponent* BulletSound = nullptr;
 	*/
 
+	UPROPERTY(BlueprintReadOnly)
 	FProjectileInfo ProjectileSettings;
 
 protected:

@@ -6,6 +6,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/TPSInventoryComponent.h"
+#include "StateEffects/TPS_StateEffect.h"
 
 // Sets default values
 AWeaponDefault::AWeaponDefault()
@@ -67,7 +68,7 @@ void AWeaponDefault::FireTick(float DeltaTime)
 					Fire();
 					FireDelay = 0;
 				}
-			}	
+			}
 		}
 	}
 	else
@@ -196,7 +197,7 @@ void AWeaponDefault::SetWeaponStateFire(bool bIsFire)
 	else
 	{
 		WeaponFiring = false;
-		FireTimer = 0.01f;
+		FireTimer = 0.01f; 
 	}
 }
 
@@ -303,11 +304,11 @@ void AWeaponDefault::Fire()
 
 				if (Hit.GetActor() && Hit.PhysMaterial.IsValid())
 				{
-					EPhysicalSurface mySurfacetype = UGameplayStatics::GetSurfaceType(Hit);
+					EPhysicalSurface mySurfaceType = UGameplayStatics::GetSurfaceType(Hit);
 
-					if (WeaponSettings.ProjectileSettings.HitDecals.Contains(mySurfacetype))
+					if (WeaponSettings.ProjectileSettings.HitDecals.Contains(mySurfaceType))
 					{
-						UMaterialInterface* myMaterial = WeaponSettings.ProjectileSettings.HitDecals[mySurfacetype];
+						UMaterialInterface* myMaterial = WeaponSettings.ProjectileSettings.HitDecals[mySurfaceType];
 
 						if (myMaterial && Hit.GetComponent())
 						{
@@ -315,9 +316,9 @@ void AWeaponDefault::Fire()
 								Hit.ImpactNormal.Rotation(), EAttachLocation::KeepWorldPosition);
 						}
 					}
-					if (WeaponSettings.ProjectileSettings.HitFXs.Contains(mySurfacetype))
+					if (WeaponSettings.ProjectileSettings.HitFXs.Contains(mySurfaceType))
 					{
-						UParticleSystem* myParticle = WeaponSettings.ProjectileSettings.HitFXs[mySurfacetype];
+						UParticleSystem* myParticle = WeaponSettings.ProjectileSettings.HitFXs[mySurfaceType];
 
 						if (myParticle)
 						{
@@ -325,7 +326,17 @@ void AWeaponDefault::Fire()
 								FTransform(Hit.ImpactNormal.Rotation(), Hit.ImpactPoint, FVector(2.0f)));
 						}
 					}
-					UGameplayStatics::ApplyPointDamage(Hit.GetActor(), WeaponSettings.WeaponDamage, Hit.TraceEnd, Hit, GetInstigatorController(), this, NULL);
+
+					UTypes::AddEffectBySurfaceType(Hit.GetActor(), ProjectileInfo.Effect, mySurfaceType);
+
+					UGameplayStatics::ApplyPointDamage(
+						Hit.GetActor(),
+						WeaponSettings.WeaponDamage,
+						Hit.TraceEnd,
+						Hit,
+						GetInstigatorController(),
+						this,
+						NULL);
 				}
 			}
 		}
@@ -363,9 +374,9 @@ void AWeaponDefault::UpdateStateWeapon(EMovementState NewMovementState)
 		CurrentDispersionReduction = WeaponSettings.DispersionWeapon.Run_StateDispersionAimReduction;
 		break;
 	case EMovementState::SprintRun_State:
+	case EMovementState::Stun_State:
 		BlockFire = true;
 		SetWeaponStateFire(false);
-		break;
 	default:
 		break;
 	}
@@ -415,7 +426,7 @@ FVector AWeaponDefault::GetFireEndLocation() const
 	{
 		//direction weapon look - Cyan
 		DrawDebugLine(GetWorld(), ShootLocation->GetComponentLocation(), ShootLocation->GetComponentLocation() + ShootLocation->GetForwardVector() * 500.0f, FColor::Cyan, false, 5.f, (uint8)'\000', 0.5f);
-		
+
 		//direction projectile must fly - Red
 		DrawDebugLine(GetWorld(), ShootLocation->GetComponentLocation(), ShootEndLocation, FColor::Red, false, 5.f, (uint8)'\000', 0.5f);
 

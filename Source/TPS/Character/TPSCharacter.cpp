@@ -15,7 +15,10 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Game/TPSGameInstance.h"
+#include "Weapons/Projectiles/ProjectileDefault.h"
 #include "Engine/World.h"
+
+DEFINE_LOG_CATEGORY_STATIC(CharacterLog, All, All);
 
 ATPSCharacter::ATPSCharacter()
 {
@@ -113,6 +116,7 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* NewInputComponent
 	NewInputComponent->BindAction(TEXT("SwitchNextWeapon"), EInputEvent::IE_Pressed, this, &ATPSCharacter::TrySwitchNextWeapon);
 	NewInputComponent->BindAction(TEXT("SwitchPreviousWeapon"), EInputEvent::IE_Pressed, this, &ATPSCharacter::TrySwitchPreviousWeapon);
 
+	NewInputComponent->BindAction(TEXT("AbilityAction"), EInputEvent::IE_Pressed, this, &ATPSCharacter::TryAbilityEnabled);
 }
 
 UDecalComponent* ATPSCharacter::GetCursorToWorld()
@@ -144,6 +148,8 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 {
 	if (!bIsAlive) return;
 
+	if (Stunned) return;
+	
 	if (SprintRunEnabled && (AxisY != 0 || AxisX != 0))
 	{
 		AddMovementInput(GetActorForwardVector());
@@ -192,6 +198,8 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 				break;
 			case EMovementState::SprintRun_State:
 				break;
+			case EMovementState::Stun_State:
+				break;
 			default:
 				break;
 			}
@@ -207,29 +215,47 @@ void ATPSCharacter::CharacterUpdate()
 	{
 	case EMovementState::Aim_State:
 		ResSpeed = MovementSpeedInfo.AimSpeedNormal;
+		UE_LOG(CharacterLog, Display, TEXT("Character State - Aim"));
 		break;
 	case EMovementState::AimWalk_State:
 		ResSpeed = MovementSpeedInfo.AimSpeedWalk;
+		UE_LOG(CharacterLog, Display, TEXT("Character State - AimWalk"));
 		break;
 	case EMovementState::Walk_State:
 		ResSpeed = MovementSpeedInfo.WalkSpeedNormal;
+		UE_LOG(CharacterLog, Display, TEXT("Character State - Walk"));
 		break;
 	case EMovementState::Run_State:
 		ResSpeed = MovementSpeedInfo.RunSpeedNormal;
+		UE_LOG(CharacterLog, Display, TEXT("Character State - Run"));
 		break;
 	case EMovementState::SprintRun_State:
 		ResSpeed = MovementSpeedInfo.SprintRunSpeedRun;
+		UE_LOG(CharacterLog, Display, TEXT("Character State - Sprint"));
 		break;
+	case EMovementState::Stun_State:
+		ResSpeed = MovementSpeedInfo.StunStateSpeed;
+		UE_LOG(CharacterLog, Display, TEXT("Character State - Stun"));
 	default:
 		break;
 	}
 
 	GetCharacterMovement()->MaxWalkSpeed = ResSpeed;
+	UE_LOG(CharacterLog, Display, TEXT("Character Speed - %.1f"), ResSpeed);
 }
 
 void ATPSCharacter::ChangeMovementState()
 {
-	if (!WalkEnabled && !SprintRunEnabled && !AimEnabled)
+	if (Stunned)
+	{
+		WalkEnabled = false;
+		AimEnabled = false;
+		SprintRunEnabled = false;
+
+		MovementState = EMovementState::Stun_State;
+	}
+
+	if (!WalkEnabled && !SprintRunEnabled && !AimEnabled && !Stunned)
 	{
 		MovementState = EMovementState::Run_State;
 	}
@@ -241,19 +267,19 @@ void ATPSCharacter::ChangeMovementState()
 			AimEnabled = false;
 			MovementState = EMovementState::SprintRun_State;
 		}
-		if (WalkEnabled && !SprintRunEnabled && AimEnabled)
+		if (WalkEnabled && !SprintRunEnabled && AimEnabled && !Stunned)
 		{
 			MovementState = EMovementState::AimWalk_State;
 		}
 		else
 		{
-			if (WalkEnabled && !SprintRunEnabled && !AimEnabled)
+			if (WalkEnabled && !SprintRunEnabled && !AimEnabled && !Stunned)
 			{
 				MovementState = EMovementState::Walk_State;
 			}
 			else
 			{
-				if (!WalkEnabled && !SprintRunEnabled && AimEnabled)
+				if (!WalkEnabled && !SprintRunEnabled && AimEnabled && !Stunned)
 				{
 					MovementState = EMovementState::Aim_State;
 				}
@@ -296,6 +322,8 @@ void ATPSCharacter::IncreaseStamina()
 
 void ATPSCharacter::AttackCharEvent(bool bIsFiring)
 {
+	if (Stunned) return;
+
 	AWeaponDefault* myWeapon = nullptr;
 	myWeapon = GetCurrentWeapon();
 	if (myWeapon)
@@ -392,7 +420,6 @@ void ATPSCharacter::RemoveCurrentWeapon()
 		CurrentWeapon = nullptr;
 	}
 }
-
 
 void ATPSCharacter::WeaponReloadStart(UAnimMontage* Anim)
 {
@@ -515,6 +542,18 @@ void ATPSCharacter::CharDead()
 	GetCursorToWorld()->SetVisibility(false);
 }
 
+void ATPSCharacter::TryAbilityEnabled()
+{
+	if (AbilityEffect)
+	{
+		UTPS_StateEffect* NewEffect = NewObject<UTPS_StateEffect>(this, AbilityEffect);
+		if (NewEffect)
+		{
+			NewEffect->InitObject(this);
+		}
+	}
+}
+
 float ATPSCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
@@ -523,6 +562,23 @@ float ATPSCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEv
 	{
 		HealthComponent->ChangeHealthValue(-DamageAmount);
 	}
+
+	if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+	{
+		AProjectileDefault* myProjectile = Cast<AProjectileDefault>(DamageCauser);
+		if (myProjectile)
+		{
+			UTypes::AddEffectBySurfaceType(this, myProjectile->ProjectileSettings.Effect, GetSurfaceType());
+		}
+	}
+
+	/*
+	const auto* myInterface = Cast<ITPS_IGameActor>(Hit.GetActor());
+	if (myInterface)
+	{
+		UTypes::AddEffectBySurfaceType(Hit.GetActor(), ProjectileInfo.Effect, mySurfacetype);
+	}
+	*/
 
 	return ActualDamage;
 }
@@ -534,4 +590,62 @@ void ATPSCharacter::EnableRagdoll()
 		GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 		GetMesh()->SetSimulatePhysics(true);
 	}
+}
+
+void ATPSCharacter::GetStun()
+{
+	Stunned = true;
+
+	AWeaponDefault* myWeapon = GetCurrentWeapon();
+	if (myWeapon)
+	{
+		myWeapon->CancelReload();
+	}
+	
+	ChangeMovementState();
+	InputAttackReleased();
+	PlayAnimMontage(StunAnimation);
+	GetCharacterMovement()->StopMovementImmediately();
+	DisableInput(Cast<APlayerController>(GetController()));
+}
+
+void ATPSCharacter::StunOut()
+{
+	Stunned = false;
+
+	ChangeMovementState();
+	EnableInput(Cast<APlayerController>(GetController()));
+}
+
+EPhysicalSurface ATPSCharacter::GetSurfaceType()
+{
+	EPhysicalSurface Result = EPhysicalSurface::SurfaceType_Default;
+	if (HealthComponent->GetCurrentShield() <= 0)
+	{
+		if (GetMesh())
+		{
+			UMaterialInterface* myMaterial = GetMesh()->GetMaterial(0);
+			if (myMaterial)
+			{
+				Result = myMaterial->GetPhysicalMaterial()->SurfaceType;
+			}
+		}
+	}
+
+	return Result;
+}
+
+TArray<UTPS_StateEffect*> ATPSCharacter::GetAllCurrentEffects()
+{
+	return Effects;
+}
+
+void ATPSCharacter::RemoveEffect(UTPS_StateEffect* RemovedEffect)
+{
+	Effects.Remove(RemovedEffect);
+}
+
+void ATPSCharacter::AddEffect(UTPS_StateEffect* NewEffect)
+{
+	Effects.Add(NewEffect);
 }

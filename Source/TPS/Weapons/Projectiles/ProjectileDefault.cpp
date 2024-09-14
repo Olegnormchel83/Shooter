@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "ProjectileDefault.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Kismet/GameplayStatics.h"
@@ -8,7 +7,7 @@
 // Sets default values
 AProjectileDefault::AProjectileDefault()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	BulletCollisionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Collision Sphere"));
@@ -37,7 +36,7 @@ AProjectileDefault::AProjectileDefault()
 void AProjectileDefault::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	BulletCollisionSphere->OnComponentHit.AddDynamic(this, &AProjectileDefault::BulletCollisionSphereHit);
 	BulletCollisionSphere->OnComponentBeginOverlap.AddDynamic(this, &AProjectileDefault::BulletCollisionSphereBeginOverlap);
 	BulletCollisionSphere->OnComponentEndOverlap.AddDynamic(this, &AProjectileDefault::BulletCollisionSphereEndOverlap);
@@ -47,7 +46,6 @@ void AProjectileDefault::BeginPlay()
 void AProjectileDefault::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void AProjectileDefault::InitProjectile(FProjectileInfo InitParam)
@@ -84,10 +82,9 @@ void AProjectileDefault::InitProjectile(FProjectileInfo InitParam)
 	UE_LOG(LogTemp, Warning, TEXT("Max Speed: %.2f"), BulletProjectileMovement->MaxSpeed);
 	UE_LOG(LogTemp, Warning, TEXT("Projectile Lifetime: %.2f"), this->GetLifeSpan());
 	*/
-
 }
 
-void AProjectileDefault::BulletCollisionSphereHit(UPrimitiveComponent* HitComp, 
+void AProjectileDefault::BulletCollisionSphereHit(UPrimitiveComponent* HitComp,
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (OtherActor && Hit.PhysMaterial.IsValid())
@@ -100,7 +97,7 @@ void AProjectileDefault::BulletCollisionSphereHit(UPrimitiveComponent* HitComp,
 
 			if (myMaterial && OtherComp)
 			{
-				UGameplayStatics::SpawnDecalAttached(myMaterial, FVector(20.0f), OtherComp, 
+				UGameplayStatics::SpawnDecalAttached(myMaterial, FVector(20.0f), OtherComp,
 					NAME_None, Hit.ImpactPoint, Hit.ImpactNormal.Rotation(), EAttachLocation::KeepWorldPosition, 10.0f);
 			}
 		}
@@ -109,7 +106,7 @@ void AProjectileDefault::BulletCollisionSphereHit(UPrimitiveComponent* HitComp,
 			UParticleSystem* myParticle = ProjectileSettings.HitFXs[mySurfaceType];
 			if (myParticle)
 			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), myParticle, 
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), myParticle,
 					FTransform(Hit.ImpactNormal.Rotation(), Hit.ImpactPoint, FVector(2.0f)));
 			}
 		}
@@ -117,6 +114,9 @@ void AProjectileDefault::BulletCollisionSphereHit(UPrimitiveComponent* HitComp,
 		{
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ProjectileSettings.HitSound, Hit.ImpactPoint);
 		}
+
+		UTypes::AddEffectBySurfaceType(Hit.GetActor(), ProjectileSettings.Effect, mySurfaceType);
+		
 	}
 
 	UGameplayStatics::ApplyPointDamage(OtherActor, ProjectileSettings.ProjectileDamage, Hit.TraceStart, Hit, GetInstigatorController(), this, NULL);
@@ -136,4 +136,3 @@ void AProjectileDefault::ImpactProjectile()
 {
 	this->Destroy();
 }
-

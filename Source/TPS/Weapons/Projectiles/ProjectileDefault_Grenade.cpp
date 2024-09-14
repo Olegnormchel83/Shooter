@@ -4,6 +4,7 @@
 #include "Weapons/Projectiles/ProjectileDefault_Grenade.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
+#include "Interfaces/TPS_IGameActor.h"
 
 int32 DebugExplodeShow = 0;
 FAutoConsoleVariableRef CVARExplodeShow(
@@ -89,9 +90,9 @@ void AProjectileDefault_Grenade::Explose()
 		1000.0f,
 		2000.0f,
 		5,
-		NULL, IgnoredActor, nullptr, nullptr);
+		NULL, IgnoredActor, this, nullptr);
 		*/
-
+	
 	UGameplayStatics::ApplyRadialDamage(
 		GetWorld(), 
 		ProjectileSettings.ExploseMaxDamage, 
@@ -102,6 +103,7 @@ void AProjectileDefault_Grenade::Explose()
 		this,
 		nullptr,
 		true);
+		
 
 	this->Destroy();
 }

@@ -29,6 +29,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	float Health = 100.0f;
+	float MaxHealth = 100.0f;
 
 public:	
 
@@ -39,6 +40,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	float GetCurrentHealth();
+
+	UFUNCTION(BlueprintCallable, Category = "Health")
+	float GetMaxHealth();
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	void SetCurrentHealth(float NewHealth);

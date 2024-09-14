@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "Types.h"
 #include "Weapons/WeaponDefault.h"
+#include "Interfaces/TPS_IGameActor.h"
+#include "StateEffects/TPS_StateEffect.h"
 
 #include "TPSCharacter.generated.h"
 
@@ -13,7 +15,7 @@ class UTPSInventoryComponent;
 class UTPSCharacterHealthComponent;
 
 UCLASS(Blueprintable)
-class ATPSCharacter : public ACharacter
+class ATPSCharacter : public ACharacter, public ITPS_IGameActor
 {
 	GENERATED_BODY()
 
@@ -45,12 +47,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
 
-	/** A decal that projects to the cursor location. */
-	/*
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UDecalComponent* CursorToWorld;
-	*/
-
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
 	UMaterialInterface* CursorMaterial = nullptr;
@@ -65,6 +61,9 @@ public:
 	FCharacterSpeed MovementSpeedInfo;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool Stunned = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool SprintRunEnabled = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
@@ -73,7 +72,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool AimEnabled = false;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Movement")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
 	float StaminaPoints = 100.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
@@ -90,6 +89,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 	TArray<UAnimMontage*>  DeadAnims;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+	UAnimMontage* StunAnimation = nullptr;
 
 	AWeaponDefault* CurrentWeapon = nullptr;
 
@@ -109,6 +111,11 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	UDecalComponent* GetCursorToWorld();
+
+	TArray<UTPS_StateEffect*> Effects;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
+	TSubclassOf<UTPS_StateEffect> AbilityEffect;
 
 	UFUNCTION()
 	void InputAxisY(float Value);
@@ -183,8 +190,15 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void TrySwitchPreviousWeapon();
 
+	void TryAbilityEnabled();
+
 	UFUNCTION()
 	void CharDead();
+
+	UFUNCTION()
+	void GetStun();
+	UFUNCTION()
+	void StunOut();
 
 	UFUNCTION()
 	void EnableRagdoll();
@@ -194,5 +208,12 @@ public:
 		struct FDamageEvent const& DamageEvent, 
 		class AController* EventInstigator, 
 		AActor* DamageCauser) override;
-};
 
+	//Interface
+	EPhysicalSurface GetSurfaceType() override;
+	TArray<UTPS_StateEffect*> GetAllCurrentEffects() override;
+	void RemoveEffect(UTPS_StateEffect* RemovedEffect) override;
+	void AddEffect(UTPS_StateEffect* NewEffect) override;
+	//End Interface
+
+};

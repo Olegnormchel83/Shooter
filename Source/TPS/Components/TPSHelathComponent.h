@@ -7,6 +7,7 @@
 #include "TPSHelathComponent.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChanged, float, Health, float, Damage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHPBuffTaken, float, Health, float, NewMaxHealth);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDead);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -22,6 +23,9 @@ public:
 	FOnHealthChanged OnHealthChanged;
 
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Health")
+	FOnHPBuffTaken OnHPBuffTaken;
+
+	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Health")
 	FOnDead OnDead;
 
 protected:
@@ -30,6 +34,7 @@ protected:
 
 	float Health = 100.0f;
 	float MaxHealth = 100.0f;
+	float DefaultMaxHealth = 100.0f;
 
 public:	
 
@@ -45,7 +50,13 @@ public:
 	float GetMaxHealth();
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
+	float GetDefaultMaxHealth();
+
+	UFUNCTION(BlueprintCallable, Category = "Health")
 	void SetCurrentHealth(float NewHealth);
+
+	UFUNCTION(BlueprintCallable, Category = "Health")
+	void SetMaxHealth(float NewMaxHealthValue);
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	virtual void ChangeHealthValue(float ChangeValue);

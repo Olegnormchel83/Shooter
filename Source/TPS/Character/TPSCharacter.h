@@ -88,6 +88,8 @@ public:
 	float AxisX = 0.0f;
 	float AxisY = 0.0f;
 
+	float MoveSpeedCoef = 1.0f;
+
 	//flags
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")

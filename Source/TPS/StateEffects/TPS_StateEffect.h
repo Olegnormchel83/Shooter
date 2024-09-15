@@ -30,6 +30,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	bool bIsStakable = false;
 
+	bool CheckCharHealthComponent();
+	UTPSCharacterHealthComponent* CharHealthComp = nullptr;
+
 	AActor* myActor = nullptr;
 
 };
@@ -108,11 +111,28 @@ class TPS_API UTPS_StateEffect_Invincibility :
 
 public:
 
-	virtual void DestroyObject() override;
-	virtual void Execute() override;
+	void DestroyObject() override;
+	void Execute() override;
+	
+	bool bIsCharacterHasBuff = false;
+};
 
-	UTPSCharacterHealthComponent* CharHealthComp = nullptr;
-	bool CheckCharHealthComponent();
+UCLASS()
+class TPS_API UTPS_StateEffect_HPBoost :
+	public UTPS_StateEffect_ExecuteTimer
+{
+	GENERATED_BODY()
+
+public:
+
+	void DestroyObject() override;
+	void Execute() override;
 
 	bool bIsCharacterHasBuff = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "HPBoost Settings");
+	float NewMaxHealth = 150.0f;
+
+	float AfterBuffHealth = 1.0f;
+
 };

@@ -214,27 +214,27 @@ void ATPSCharacter::CharacterUpdate()
 	switch (MovementState)
 	{
 	case EMovementState::Aim_State:
-		ResSpeed = MovementSpeedInfo.AimSpeedNormal;
+		ResSpeed = MovementSpeedInfo.AimSpeedNormal * MoveSpeedCoef;
 		//UE_LOG(CharacterLog, Display, TEXT("Character State - Aim"));
 		break;
 	case EMovementState::AimWalk_State:
-		ResSpeed = MovementSpeedInfo.AimSpeedWalk;
+		ResSpeed = MovementSpeedInfo.AimSpeedWalk * MoveSpeedCoef;
 		//UE_LOG(CharacterLog, Display, TEXT("Character State - AimWalk"));
 		break;
 	case EMovementState::Walk_State:
-		ResSpeed = MovementSpeedInfo.WalkSpeedNormal;
+		ResSpeed = MovementSpeedInfo.WalkSpeedNormal * MoveSpeedCoef;
 		//UE_LOG(CharacterLog, Display, TEXT("Character State - Walk"));
 		break;
 	case EMovementState::Run_State:
-		ResSpeed = MovementSpeedInfo.RunSpeedNormal;
+		ResSpeed = MovementSpeedInfo.RunSpeedNormal * MoveSpeedCoef;
 		//UE_LOG(CharacterLog, Display, TEXT("Character State - Run"));
 		break;
 	case EMovementState::SprintRun_State:
-		ResSpeed = MovementSpeedInfo.SprintRunSpeedRun;
+		ResSpeed = MovementSpeedInfo.SprintRunSpeedRun * MoveSpeedCoef;
 		//UE_LOG(CharacterLog, Display, TEXT("Character State - Sprint"));
 		break;
 	case EMovementState::Stun_State:
-		ResSpeed = MovementSpeedInfo.StunStateSpeed;
+		ResSpeed = MovementSpeedInfo.StunStateSpeed * MoveSpeedCoef;
 		//UE_LOG(CharacterLog, Display, TEXT("Character State - Stun"));
 	default:
 		break;

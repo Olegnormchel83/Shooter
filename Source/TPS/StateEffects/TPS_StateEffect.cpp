@@ -176,15 +176,11 @@ void UTPS_StateEffect_DisableInput::ChangeCharacterInputStatus(bool bStatus)
 
 	if (Character && !bStatus && !CharacterStunned)
 	{
-		//UE_LOG(StateEffectLog, Display, TEXT("Character Get Stun"));
-
 		Player->GetStun();
 		CharacterStunned = true;
 	}
 	else if (Character && bStatus && CharacterStunned)
 	{
-		//UE_LOG(StateEffectLog, Display, TEXT("Character Back"));
-
 		Player->StunOut();
 		CharacterStunned = false;
 	}
@@ -194,8 +190,6 @@ void UTPS_StateEffect_Invincibility::DestroyObject()
 {
 	if (CheckCharHealthComponent() && bIsCharacterHasBuff)
 	{
-		UE_LOG(StateEffectLog, Display, TEXT("Character is NOT INVINCIBILITY"));
-
 		bIsCharacterHasBuff = false;
 		CharHealthComp->bIsInvincibility = false;
 	}
@@ -207,14 +201,12 @@ void UTPS_StateEffect_Invincibility::Execute()
 {
 	if (CheckCharHealthComponent() && !bIsCharacterHasBuff)
 	{
-		UE_LOG(StateEffectLog, Display, TEXT("Character get INVINCIBILITY"));
-
 		bIsCharacterHasBuff = true;
 		CharHealthComp->bIsInvincibility = true;
 	}
 }
 
-bool UTPS_StateEffect_Invincibility::CheckCharHealthComponent()
+bool UTPS_StateEffect::CheckCharHealthComponent()
 {
 	if (!myActor) return false;
 
@@ -227,8 +219,44 @@ bool UTPS_StateEffect_Invincibility::CheckCharHealthComponent()
 
 	if (!CharacterHealthComponent) return false;
 
-	
 	CharHealthComp = CharacterHealthComponent;
 
 	return true;
+}
+
+void UTPS_StateEffect_HPBoost::DestroyObject()
+{
+	if (CheckCharHealthComponent() && bIsCharacterHasBuff)
+	{
+		if (CharHealthComp->GetCurrentHealth() >= CharHealthComp->GetDefaultMaxHealth())
+		{
+			AfterBuffHealth = CharHealthComp->GetDefaultMaxHealth();
+		}
+		else
+		{
+			AfterBuffHealth = CharHealthComp->GetCurrentHealth();
+		}
+		CharHealthComp->SetCurrentHealth(AfterBuffHealth);
+
+		bIsCharacterHasBuff = false;
+		CharHealthComp->SetMaxHealth(CharHealthComp->GetDefaultMaxHealth());
+		CharHealthComp->OnHPBuffTaken.Broadcast(
+			AfterBuffHealth,
+			CharHealthComp->GetDefaultMaxHealth());
+
+	}
+
+	Super::DestroyObject();
+}
+
+void UTPS_StateEffect_HPBoost::Execute()
+{
+	if (CheckCharHealthComponent() && !bIsCharacterHasBuff)
+	{
+		bIsCharacterHasBuff = true;
+		CharHealthComp->SetMaxHealth(NewMaxHealth);
+		CharHealthComp->OnHPBuffTaken.Broadcast(
+			CharHealthComp->GetCurrentHealth(), 
+			NewMaxHealth);
+	}
 }

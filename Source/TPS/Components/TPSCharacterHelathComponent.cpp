@@ -25,7 +25,7 @@ void UTPSCharacterHealthComponent::ChangeHealthValue(float ChangeValue)
 		ChangeShieldValue(CurrentDamage);
 		if (Shield <= 0.0f)
 		{
-			if (ShieldDestroyedFX) // && SoundShieldDestroyed??? 
+			if (ShieldDestroyedFX)
 			{
 				//FX
 				UGameplayStatics::SpawnEmitterAttached(

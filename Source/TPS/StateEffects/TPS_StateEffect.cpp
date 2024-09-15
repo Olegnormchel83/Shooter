@@ -5,6 +5,7 @@
 #include "Interfaces/TPS_IGameActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "TPSCharacter.h"
+#include "Components/TPSCharacterHelathComponent.h"
 #include "Structure/TPS_EnvironmentStructure.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -187,4 +188,47 @@ void UTPS_StateEffect_DisableInput::ChangeCharacterInputStatus(bool bStatus)
 		Player->StunOut();
 		CharacterStunned = false;
 	}
+}
+
+void UTPS_StateEffect_Invincibility::DestroyObject()
+{
+	if (CheckCharHealthComponent() && bIsCharacterHasBuff)
+	{
+		UE_LOG(StateEffectLog, Display, TEXT("Character is NOT INVINCIBILITY"));
+
+		bIsCharacterHasBuff = false;
+		CharHealthComp->bIsInvincibility = false;
+	}
+
+	Super::DestroyObject();
+}
+
+void UTPS_StateEffect_Invincibility::Execute()
+{
+	if (CheckCharHealthComponent() && !bIsCharacterHasBuff)
+	{
+		UE_LOG(StateEffectLog, Display, TEXT("Character get INVINCIBILITY"));
+
+		bIsCharacterHasBuff = true;
+		CharHealthComp->bIsInvincibility = true;
+	}
+}
+
+bool UTPS_StateEffect_Invincibility::CheckCharHealthComponent()
+{
+	if (!myActor) return false;
+
+	auto Player = Cast<ATPSCharacter>(myActor);
+	if (!Player) return false;
+
+	auto CharacterHealthComponent = Cast<UTPSCharacterHealthComponent>
+		(Player->GetComponentByClass
+		(UTPSCharacterHealthComponent::StaticClass()));
+
+	if (!CharacterHealthComponent) return false;
+
+	
+	CharHealthComp = CharacterHealthComponent;
+
+	return true;
 }

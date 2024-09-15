@@ -14,6 +14,8 @@ void UTPSCharacterHealthComponent::ChangeHealthValue(float ChangeValue)
 	const auto Player = Cast<ATPSCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
 	if (!Player) return;
 
+	if (bIsInvincibility && ChangeValue < 0) return;
+
 	if (!Player->bIsAlive) return;
 
 	float CurrentDamage = ChangeValue * CoefDamage;
@@ -60,6 +62,8 @@ void UTPSCharacterHealthComponent::ChangeShieldValue(float ChangeValue)
 
 	const auto Player = Cast<ATPSCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
 	if (!Player) return;
+
+	if (bIsInvincibility && ChangeValue < 0) return;
 
 	if (!Player->bIsAlive) return;
 
@@ -151,4 +155,9 @@ void UTPSCharacterHealthComponent::RecoveryShield()
 	} 
 
 	OnShieldChanged.Broadcast(Shield, ShieldRecoverValue);
+}
+
+bool UTPSCharacterHealthComponent::IsInvincibility()
+{
+	return bIsInvincibility;
 }

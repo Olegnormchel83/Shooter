@@ -28,6 +28,9 @@ protected:
 
 public:
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Buff")
+	bool bIsInvincibility = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shield")
 	float CooldownShieldRecoverTime = 5.0f;
 
@@ -56,4 +59,6 @@ public:
 	void CooldownShieldEnd();
 
 	void RecoveryShield();
+
+	bool IsInvincibility();
 };

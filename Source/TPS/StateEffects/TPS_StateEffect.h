@@ -9,6 +9,7 @@
 
 #include "TPS_StateEffect.generated.h"
 
+class UTPSCharacterHealthComponent;
 
 /**
  * 
@@ -34,7 +35,8 @@ public:
 };
 
 UCLASS()
-class TPS_API UTPS_StateEffect_ExecuteOnce : public UTPS_StateEffect
+class TPS_API UTPS_StateEffect_ExecuteOnce : 
+	public UTPS_StateEffect
 {
 	GENERATED_BODY()
 
@@ -51,7 +53,8 @@ public:
 };
 
 UCLASS()
-class TPS_API UTPS_StateEffect_ExecuteTimer : public UTPS_StateEffect
+class TPS_API UTPS_StateEffect_ExecuteTimer : 
+	public UTPS_StateEffect
 {
 	GENERATED_BODY()
 
@@ -75,7 +78,6 @@ public:
 	FTimerHandle TimerHandle_ExecuteTimer;
 	FTimerHandle TimerHandle_EffectTimer;
 
-	//May be add particles array...
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting ExecuteTimer")
 	UParticleSystem* ParticleEffect = nullptr;
 
@@ -83,7 +85,8 @@ public:
 };
 
 UCLASS()
-class TPS_API UTPS_StateEffect_DisableInput : public UTPS_StateEffect_ExecuteTimer
+class TPS_API UTPS_StateEffect_DisableInput : 
+	public UTPS_StateEffect_ExecuteTimer
 {
 	GENERATED_BODY()
 
@@ -95,4 +98,21 @@ public:
 	bool CharacterStunned = false;
 
 	void ChangeCharacterInputStatus(bool bStatus);
+};
+
+UCLASS()
+class TPS_API UTPS_StateEffect_Invincibility :
+	public UTPS_StateEffect_ExecuteTimer
+{
+	GENERATED_BODY()
+
+public:
+
+	virtual void DestroyObject() override;
+	virtual void Execute() override;
+
+	UTPSCharacterHealthComponent* CharHealthComp = nullptr;
+	bool CheckCharHealthComponent();
+
+	bool bIsCharacterHasBuff = false;
 };

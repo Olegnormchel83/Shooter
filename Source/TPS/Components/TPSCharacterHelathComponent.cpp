@@ -97,6 +97,8 @@ void UTPSCharacterHealthComponent::ChangeShieldValue(float ChangeValue)
 			Shield = 0.0f;
 		}
 	}
+
+	/*
 	GetWorld()->GetTimerManager().SetTimer(
 			TimerHadle_CooldownShieldTimer, 
 			this, 
@@ -105,6 +107,7 @@ void UTPSCharacterHealthComponent::ChangeShieldValue(float ChangeValue)
 			false);
 
 	GetWorld()->GetTimerManager().ClearTimer(TimerHadle_ShieldRecoveryRateTimer);
+	*/
 }
 
 void UTPSCharacterHealthComponent::CooldownShieldEnd()
@@ -116,13 +119,14 @@ void UTPSCharacterHealthComponent::CooldownShieldEnd()
 
 	if (!Player->bIsAlive) return;
 	
+	/*
 	GetWorld()->GetTimerManager().SetTimer(
 			TimerHadle_ShieldRecoveryRateTimer,
 			this,
 			&UTPSCharacterHealthComponent::RecoveryShield,
 			ShieldRecoverRate,
 			true);
-	
+	*/
 }
 
 void UTPSCharacterHealthComponent::RecoveryShield()

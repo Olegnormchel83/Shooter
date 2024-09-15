@@ -84,6 +84,7 @@ bool UTPS_StateEffect_ExecuteTimer::InitObject(AActor* Actor)
 
 	if (ParticleEffect)
 	{
+		/*
 		FVector Loc = FVector(FVector::ZeroVector);
 
 		auto Character = Cast<ACharacter>(myActor);
@@ -103,13 +104,13 @@ bool UTPS_StateEffect_ExecuteTimer::InitObject(AActor* Actor)
 		{
 			Loc = Environment->GetParticleOffset();
 		}
+		*/
 
-		FName NameBoneToAttached;
 		ParticleEmmiter = UGameplayStatics::SpawnEmitterAttached(
 			ParticleEffect,
 			myActor->GetRootComponent(),
-			NameBoneToAttached,
-			Loc,
+			NameBoneToAttachParticle,
+			ParticleOffset,
 			FRotator::ZeroRotator,
 			EAttachLocation::SnapToTarget,
 			false);

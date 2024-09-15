@@ -67,6 +67,10 @@ public:
 	float Timer = 5.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting ExecuteTimer")
 	float RateTime = 1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting ExecuteTimer")
+	FName NameBoneToAttachParticle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Setting ExecuteTimer")
+	FVector ParticleOffset = FVector(FVector::ZeroVector);
 
 	FTimerHandle TimerHandle_ExecuteTimer;
 	FTimerHandle TimerHandle_EffectTimer;

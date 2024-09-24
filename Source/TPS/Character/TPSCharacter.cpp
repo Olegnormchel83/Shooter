@@ -493,6 +493,8 @@ void ATPSCharacter::WeaponReloadEnd(bool bIsSuccess, int32 AmmoTake)
 bool ATPSCharacter::TrySwitchWeaponToIndexByKeyInput(int32 ToIndex)
 {
 	bool bIsSuccess = false;
+
+	if (Stunned) return false;
 	if (!InventoryComponent) return false;
 	if (!CurrentWeapon) return false;
 	if (!CurrentWeapon->WeaponReloading && InventoryComponent->WeaponSlots.IsValidIndex(ToIndex))
@@ -501,12 +503,7 @@ bool ATPSCharacter::TrySwitchWeaponToIndexByKeyInput(int32 ToIndex)
 		{
 			int32 OldIndex = CurrentIndexWeapon;
 			FAdditionalWeaponInfo OldInfo;
-
 			OldInfo = CurrentWeapon->WeaponInfo;
-			if (CurrentWeapon->WeaponReloading)
-			{
-				CurrentWeapon->CancelReload();
-			}
 
 			bIsSuccess = InventoryComponent->SwitchWeaponByIndex(ToIndex, OldIndex, OldInfo);
 		}
@@ -541,7 +538,7 @@ void ATPSCharacter::CharFire_BP_Implementation(UAnimMontage* Anim)
 
 void ATPSCharacter::TryReloadWeapon()
 {
-	if (CurrentWeapon)
+	if (CurrentWeapon && !Stunned)
 	{
 		if (CurrentWeapon->GetWeaponRound() < CurrentWeapon->WeaponSettings.MaxRound 
 			&& CurrentWeapon->CheckCanWeaponReload())
@@ -553,18 +550,14 @@ void ATPSCharacter::TryReloadWeapon()
 
 void ATPSCharacter::TrySwitchNextWeapon()
 {
+	if (Stunned) return;
+	if (CurrentWeapon->WeaponReloading) return;
+
 	if (InventoryComponent->WeaponSlots.Num() > 1)
 	{
 		int8 OldIndex = CurrentIndexWeapon;
 		FAdditionalWeaponInfo OldInfo;
-		if (CurrentWeapon)
-		{
-			OldInfo = CurrentWeapon->WeaponInfo;
-			if (CurrentWeapon->WeaponReloading)
-			{
-				CurrentWeapon->CancelReload();
-			}
-		}
+		OldInfo = CurrentWeapon->WeaponInfo;
 
 		if (InventoryComponent)
 		{
@@ -578,18 +571,14 @@ void ATPSCharacter::TrySwitchNextWeapon()
 
 void ATPSCharacter::TrySwitchPreviousWeapon()
 {
+	if (Stunned) return;
+	if (CurrentWeapon->WeaponReloading) return;
+
 	if (InventoryComponent->WeaponSlots.Num() > 1)
 	{
 		int8 OldIndex = CurrentIndexWeapon;
 		FAdditionalWeaponInfo OldInfo;
-		if (CurrentWeapon)
-		{
-			OldInfo = CurrentWeapon->WeaponInfo;
-			if (CurrentWeapon->WeaponReloading)
-			{
-				CurrentWeapon->CancelReload();
-			}
-		}
+		OldInfo = CurrentWeapon->WeaponInfo;
 
 		if (InventoryComponent)
 		{
@@ -603,7 +592,7 @@ void ATPSCharacter::TrySwitchPreviousWeapon()
 
 void ATPSCharacter::DropCurrentWeapon() //TODO: Add swap to next weapon in inventory
 {
-	if (InventoryComponent)
+	if (InventoryComponent && !Stunned)
 	{
 		FDropItem ItemInfo;
 		InventoryComponent->DropWeaponByIndex(CurrentIndexWeapon, ItemInfo);

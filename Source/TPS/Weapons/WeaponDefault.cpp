@@ -7,6 +7,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/TPSInventoryComponent.h"
 #include "StateEffects/TPS_StateEffect.h"
+#include "TPSCharacter.h"
+
+DEFINE_LOG_CATEGORY_STATIC(WeaponDefaultLog, All, All);
 
 // Sets default values
 AWeaponDefault::AWeaponDefault()
@@ -36,6 +39,9 @@ void AWeaponDefault::BeginPlay()
 {
 	Super::BeginPlay();
 	WeaponInit();
+
+	Player = Cast<ATPSCharacter>(GetOwner());
+	if (!Player) Player = nullptr;
 }
 
 // Called every frame
@@ -499,7 +505,7 @@ void AWeaponDefault::FinishReload()
 
 	if (NeedToReload > AvailableAmmoFromInventory)
 	{
-		WeaponInfo.Round = AvailableAmmoFromInventory;
+		WeaponInfo.Round += AvailableAmmoFromInventory;
 		AmmoNeedTake = AvailableAmmoFromInventory;
 	}
 	else
@@ -528,6 +534,16 @@ bool AWeaponDefault::CheckCanWeaponReload()
 	bool Result = true;
 	if (GetOwner())
 	{
+		if (WeaponReloading) return false;
+
+		if (Player)
+		{
+			if (Player->IsStunned())
+			{
+				return false;
+			}
+		}
+
 		UTPSInventoryComponent* MyInv = Cast<UTPSInventoryComponent>
 			(GetOwner()->GetComponentByClass(UTPSInventoryComponent::StaticClass()));
 		if (MyInv)
@@ -561,11 +577,6 @@ int8 AWeaponDefault::GetAailableAmmoForReload()
 
 	return AvailableAmmoForWeapon;
 
-	/*
-	maybe
-
-	return WeaponSettings.MaxRound ???
-	*/
 }
 
 void AWeaponDefault::InitDropMesh(UStaticMesh* DropMesh, FTransform Offset, FVector DropImpulseDirection, float LifeTimeMesh, float ImpulseRandomDisperssion, float PowerImpulse, float CustomMass)

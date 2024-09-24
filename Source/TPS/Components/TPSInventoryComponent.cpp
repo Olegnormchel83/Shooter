@@ -242,12 +242,13 @@ bool UTPSInventoryComponent::SwitchWeaponToNextPreviousIndex(int32 ChangeToIndex
 
 	if (bIsSuccess)
 	{
-		
+		/*
 		UE_LOG(LogTemp, Display, TEXT("Weapon Switched In Inventory"));
 		UE_LOG(LogTemp, Display, TEXT("Old Index: %i"), OldIndex);
 		UE_LOG(LogTemp, Display, TEXT("New Index: %i"), NewCurrentIndex);
 		UE_LOG(LogTemp, Display, TEXT("Current Weapon Name: %s"), *WeaponSlots[NewCurrentIndex].NameItem.ToString());
-		
+		*/
+
 		SetAdditionalInfoWeapon(OldIndex, OldInfo);
 		OnSwitchWeapon.Broadcast(NewIdWeapon, NewAdditionalInfo, NewCurrentIndex);
 		OnSwitchWeaponInInventory.Broadcast(NewCurrentIndex);
@@ -269,6 +270,7 @@ bool UTPSInventoryComponent::SwitchWeaponByIndex(int32 IndexWeaponToChange, int3
 	{
 		SetAdditionalInfoWeapon(PreviousIndex, PreviousWeaponInfo);
 		OnSwitchWeapon.Broadcast(ToSwitchIdWeapon, ToSwitchAdditiobnalInfo, IndexWeaponToChange);
+		OnSwitchWeaponInInventory.Broadcast(IndexWeaponToChange);
 
 		EWeaponType ToSwitchWeaponType;
 		if (GetWeaponTypeByNameWeapon(ToSwitchIdWeapon, ToSwitchWeaponType))

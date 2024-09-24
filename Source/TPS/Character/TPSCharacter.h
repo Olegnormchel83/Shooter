@@ -230,6 +230,11 @@ public:
 		return bIsAlive; 
 	}
 
+	bool IsStunned() 
+	{
+		return Stunned;
+	}
+
 
 #pragma endregion
 

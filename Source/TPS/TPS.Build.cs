@@ -26,7 +26,10 @@ public class TPS : ModuleRules
 			"TPS/FunctionLibrary",
 			"TPS/Game",
 			"TPS/Components",
-			"TPS/Weapons"
+			"TPS/Weapons",
+			"TPS/Interfaces",
+			"TPS/StateEffects",
+			"TPS/Structure"
 		});
     }
 }

@@ -54,34 +54,37 @@ void UTPSHealthComponent::SetMaxHealth(float NewMaxHealthValue)
 void UTPSHealthComponent::ChangeHealthValue(float ChangeValue)
 {
 	ChangeValue *= CoefDamage;
-
+	
 	UE_LOG(HealthComponentLog, Display, TEXT("Current HP - %.1f"), GetCurrentHealth());
 	UE_LOG(HealthComponentLog, Display, TEXT("Damaghe/Heal - %.1f"), ChangeValue);
+	
 
 	float tmp = Health + ChangeValue;
 	if (tmp > GetMaxHealth())
 	{
 		Health = GetMaxHealth();
+		OnHealthChanged.Broadcast(Health, ChangeValue);
 	}
 
 	if (tmp > 0 && tmp <= GetMaxHealth())
 	{
 		Health = tmp;
+		OnHealthChanged.Broadcast(Health, ChangeValue);
 	}
-
-	OnHealthChanged.Broadcast(Health, ChangeValue);
 
 	UE_LOG(HealthComponentLog, Display, TEXT("Changed HP - %.1f"), GetCurrentHealth());
 
 	if (tmp <= 0)
 	{
+		Health = 0;
+		OnHealthChanged.Broadcast(Health, ChangeValue);
 		OnDead.Broadcast();
 	}
 
-	/*
+	
 	UE_LOG(LogTemp, Display, TEXT("Current HP: %0.1f"), GetCurrentHealth());
 	UE_LOG(LogTemp, Display, TEXT("Changed HP: %0.1f"), ChangeValue);
-	*/
+	
 	
 	
 }

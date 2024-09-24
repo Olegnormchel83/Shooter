@@ -109,6 +109,13 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* NewInputComponent
 	NewInputComponent->BindAxis(TEXT("MoveForward"), this, &ATPSCharacter::InputAxisX);
 	NewInputComponent->BindAxis(TEXT("MoveRight"), this, &ATPSCharacter::InputAxisY);
 
+	NewInputComponent->BindAction(TEXT("ChangeToSprint"), EInputEvent::IE_Pressed, this, &ATPSCharacter::InputSprintPressed);
+	NewInputComponent->BindAction(TEXT("ChangeToWalk"), EInputEvent::IE_Pressed, this, &ATPSCharacter::InputWalkPressed);
+	NewInputComponent->BindAction(TEXT("AimEvent"), EInputEvent::IE_Pressed, this, &ATPSCharacter::InputAimPressed);
+	NewInputComponent->BindAction(TEXT("ChangeToSprint"), EInputEvent::IE_Released, this, &ATPSCharacter::InputSprintReleased);
+	NewInputComponent->BindAction(TEXT("ChangeToWalk"), EInputEvent::IE_Released, this, &ATPSCharacter::InputWalkReleased);
+	NewInputComponent->BindAction(TEXT("AimEvent"), EInputEvent::IE_Released, this, &ATPSCharacter::InputAimReleased);
+
 	NewInputComponent->BindAction(TEXT("FireEvent"), EInputEvent::IE_Pressed, this, &ATPSCharacter::InputAttackPressed);
 	NewInputComponent->BindAction(TEXT("FireEvent"), EInputEvent::IE_Released, this, &ATPSCharacter::InputAttackReleased);
 	NewInputComponent->BindAction(TEXT("ReloadEvent"), EInputEvent::IE_Released, this, &ATPSCharacter::TryReloadWeapon);
@@ -117,11 +124,32 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* NewInputComponent
 	NewInputComponent->BindAction(TEXT("SwitchPreviousWeapon"), EInputEvent::IE_Pressed, this, &ATPSCharacter::TrySwitchPreviousWeapon);
 
 	NewInputComponent->BindAction(TEXT("AbilityAction"), EInputEvent::IE_Pressed, this, &ATPSCharacter::TryAbilityEnabled);
-}
 
-UDecalComponent* ATPSCharacter::GetCursorToWorld()
-{
-	return CurrentCursor;
+	NewInputComponent->BindAction(TEXT("DropCurrentWeapon"), EInputEvent::IE_Pressed, this, &ATPSCharacter::DropCurrentWeapon);
+	
+	TArray<FKey> HotKeys;
+	HotKeys.Add(EKeys::One);
+	HotKeys.Add(EKeys::Two);
+	HotKeys.Add(EKeys::Three);
+	HotKeys.Add(EKeys::Four);
+	HotKeys.Add(EKeys::Five);
+	HotKeys.Add(EKeys::Six);
+	HotKeys.Add(EKeys::Seven);
+	HotKeys.Add(EKeys::Eight);
+	HotKeys.Add(EKeys::Nine);
+	HotKeys.Add(EKeys::Zero);
+
+	NewInputComponent->BindKey(HotKeys[1], IE_Pressed, this, &ATPSCharacter::TKeyPressed<1>);
+	NewInputComponent->BindKey(HotKeys[2], IE_Pressed, this, &ATPSCharacter::TKeyPressed<2>);
+	NewInputComponent->BindKey(HotKeys[3], IE_Pressed, this, &ATPSCharacter::TKeyPressed<3>);
+	NewInputComponent->BindKey(HotKeys[4], IE_Pressed, this, &ATPSCharacter::TKeyPressed<4>);
+	NewInputComponent->BindKey(HotKeys[5], IE_Pressed, this, &ATPSCharacter::TKeyPressed<5>);
+	NewInputComponent->BindKey(HotKeys[6], IE_Pressed, this, &ATPSCharacter::TKeyPressed<6>);
+	NewInputComponent->BindKey(HotKeys[7], IE_Pressed, this, &ATPSCharacter::TKeyPressed<7>);
+	NewInputComponent->BindKey(HotKeys[8], IE_Pressed, this, &ATPSCharacter::TKeyPressed<8>);
+	NewInputComponent->BindKey(HotKeys[9], IE_Pressed, this, &ATPSCharacter::TKeyPressed<9>);
+	NewInputComponent->BindKey(HotKeys[0], IE_Pressed, this, &ATPSCharacter::TKeyPressed<0>);
+
 }
 
 void ATPSCharacter::InputAxisY(float Value)
@@ -142,6 +170,42 @@ void ATPSCharacter::InputAttackPressed()
 void ATPSCharacter::InputAttackReleased()
 {
 	AttackCharEvent(false);
+}
+
+void ATPSCharacter::InputWalkPressed()
+{
+	WalkEnabled = true;
+	ChangeMovementState();
+}
+
+void ATPSCharacter::InputWalkReleased()
+{
+	WalkEnabled = false;
+	ChangeMovementState();
+}
+
+void ATPSCharacter::InputSprintPressed()
+{
+	SprintRunEnabled = true;
+	ChangeMovementState();
+}
+
+void ATPSCharacter::InputSprintReleased()
+{
+	SprintRunEnabled = false;
+	ChangeMovementState();
+}
+
+void ATPSCharacter::InputAimPressed()
+{
+	AimEnabled = true;
+	ChangeMovementState();
+}
+
+void ATPSCharacter::InputAimReleased()
+{
+	AimEnabled = false;
+	ChangeMovementState();
 }
 
 void ATPSCharacter::MovementTick(float DeltaTime)
@@ -312,7 +376,7 @@ void ATPSCharacter::DecreaseStamina()
 
 void ATPSCharacter::IncreaseStamina()
 {
-	if (CurrentStamina < StaminaPoints && !SprintRunEnabled)
+	if (CurrentStamina < MaxStaminaPoints && !SprintRunEnabled)
 	{
 		CurrentStamina += PlusStamina;
 	}
@@ -338,16 +402,6 @@ void ATPSCharacter::AttackCharEvent(bool bIsFiring)
 		UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::AttackCharEvent - CurrentWeapon - NULL"));
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("ATPSCharacter::AttackCharEvent - CurrentWeapon - NULL ")));
 	}
-}
-
-AWeaponDefault* ATPSCharacter::GetCurrentWeapon()
-{
-	return CurrentWeapon;
-}
-
-int32 ATPSCharacter::GetCurrentWeaponIndex()
-{
-	return CurrentIndexWeapon;
 }
 
 void ATPSCharacter::InitWeapon(FName IdWeapon, FAdditionalWeaponInfo AdditionalWeaponInfo, int32 NewCurrentIndexWeapon)
@@ -388,7 +442,7 @@ void ATPSCharacter::InitWeapon(FName IdWeapon, FAdditionalWeaponInfo AdditionalW
 						CurrentIndexWeapon = NewCurrentIndexWeapon;
 					}
 
-					myWeapon->OnWeaponFireStart.AddDynamic(this, &ATPSCharacter::CharFire);
+					myWeapon->OnWeaponFireStart.AddDynamic(this, &ATPSCharacter::WeaponFireStart);
 
 					myWeapon->OnWeaponReloadStart.AddDynamic(this, &ATPSCharacter::WeaponReloadStart);
 					myWeapon->OnWeaponReloadEnd.AddDynamic(this, &ATPSCharacter::WeaponReloadEnd);
@@ -436,6 +490,31 @@ void ATPSCharacter::WeaponReloadEnd(bool bIsSuccess, int32 AmmoTake)
 	WeaponReloadEnd_BP(bIsSuccess);
 }
 
+bool ATPSCharacter::TrySwitchWeaponToIndexByKeyInput(int32 ToIndex)
+{
+	bool bIsSuccess = false;
+	if (!InventoryComponent) return false;
+	if (!CurrentWeapon) return false;
+	if (!CurrentWeapon->WeaponReloading && InventoryComponent->WeaponSlots.IsValidIndex(ToIndex))
+	{
+		if (CurrentIndexWeapon != ToIndex)
+		{
+			int32 OldIndex = CurrentIndexWeapon;
+			FAdditionalWeaponInfo OldInfo;
+
+			OldInfo = CurrentWeapon->WeaponInfo;
+			if (CurrentWeapon->WeaponReloading)
+			{
+				CurrentWeapon->CancelReload();
+			}
+
+			bIsSuccess = InventoryComponent->SwitchWeaponByIndex(ToIndex, OldIndex, OldInfo);
+		}
+	}
+
+	return bIsSuccess;
+}
+
 void ATPSCharacter::WeaponReloadStart_BP_Implementation(UAnimMontage* Anim)
 {
 	//in BP
@@ -446,7 +525,7 @@ void ATPSCharacter::WeaponReloadEnd_BP_Implementation(bool bIsSuccess)
 	//in BP
 }
 
-void ATPSCharacter::CharFire(UAnimMontage* Anim)
+void ATPSCharacter::WeaponFireStart(UAnimMontage* Anim)
 {
 	if (InventoryComponent && CurrentWeapon)
 	{
@@ -489,7 +568,7 @@ void ATPSCharacter::TrySwitchNextWeapon()
 
 		if (InventoryComponent)
 		{
-			if (InventoryComponent->SwitchWeaponToIndex(CurrentIndexWeapon + 1, OldIndex, OldInfo, true))
+			if (InventoryComponent->SwitchWeaponToNextPreviousIndex(CurrentIndexWeapon + 1, OldIndex, OldInfo, true))
 			{
 				
 			}
@@ -514,11 +593,20 @@ void ATPSCharacter::TrySwitchPreviousWeapon()
 
 		if (InventoryComponent)
 		{
-			if (InventoryComponent->SwitchWeaponToIndex(CurrentIndexWeapon - 1, OldIndex, OldInfo, false))
+			if (InventoryComponent->SwitchWeaponToNextPreviousIndex(CurrentIndexWeapon - 1, OldIndex, OldInfo, false))
 			{
 
 			}
 		}
+	}
+}
+
+void ATPSCharacter::DropCurrentWeapon() //TODO: Add swap to next weapon in inventory
+{
+	if (InventoryComponent)
+	{
+		FDropItem ItemInfo;
+		InventoryComponent->DropWeaponByIndex(CurrentIndexWeapon, ItemInfo);
 	}
 }
 

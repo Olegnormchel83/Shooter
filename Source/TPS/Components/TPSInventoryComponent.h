@@ -15,6 +15,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponAmmoEmpty, EWeaponType, Wea
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponAmmoAvailable, EWeaponType, WeaponType);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnUpdateWeaponSlots, int32, IndexSlotChange, FWeaponSlot, NewInfo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSwitchWeaponInInventory, int32, NewIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponHaveRound, int32, IndexSlotWeapon);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponHaveNotRound, int32, IndexSlotWeapon);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TPS_API UTPSInventoryComponent : public UActorComponent
@@ -27,24 +29,23 @@ public:
 
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
 	FOnSwitchWeapon OnSwitchWeapon;
-
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
 	FOnAmmoChange OnAmmoChange;
-
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
 	FOnWeaponAdditionalInfoChange OnWeaponAdditionalInfoChange;
-
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
 	FOnWeaponAmmoEmpty OnWeaponAmmoEmpty;
-
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
 	FOnWeaponAmmoAvailable OnWeaponAmmoAvailable;
-
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
 	FOnUpdateWeaponSlots OnUpdateWeaponSlots;
-
 	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
 	FOnSwitchWeaponInInventory OnSwitchWeaponInInventory;
+
+	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+	FOnWeaponHaveRound OnWeaponHaveRound;
+	UPROPERTY(BlueprintAssignable, EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+	FOnWeaponHaveNotRound OnWeaponHaveNotRound;
 
 protected:
 	// Called when the game starts
@@ -63,10 +64,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons")
 	int32 MaxSlotsWeapon = 0;
 
-	bool SwitchWeaponToIndex(int32 ChangeToIndex, int32 OldIndex, FAdditionalWeaponInfo OldInfo, bool bIsForward);
+	bool SwitchWeaponToNextPreviousIndex(int32 ChangeToIndex, int32 OldIndex, FAdditionalWeaponInfo OldInfo, bool bIsForward);
+	bool SwitchWeaponByIndex(int32 IndexWeaponToChange, int32 PreviousIndex, FAdditionalWeaponInfo PreviousWeaponInfo);
 
 	FAdditionalWeaponInfo GetAdditionalWeaponInfo(int32 WeaponIndex);
 	int32 GetWeaponIndexSlotByName(FName IdWeaponName);
+	bool GetWeaponTypeByIndexSlot(int32 IndexSlot, EWeaponType &WeaponType);
+	bool GetWeaponTypeByNameWeapon(FName IdWeaponName, EWeaponType &WeaponType);
 
 	UFUNCTION(BlueprintCallable)
 	FName GetWeaponNameBySlotIndex(int32 IndexSlot);
@@ -96,27 +100,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void UpdateInventory(TArray<FWeaponSlot> Weapons);
 
-private:
+	UFUNCTION(BlueprintCallable)
+	void DropWeaponByIndex(int32 ByIndex, FDropItem &DropItemInfo);
 
-#pragma region SwitchWeaponInInventoryHelpFunctions
-	void SelectNewWeapon(
-		int8 tmpIndex,
-		bool bIsSuccess,
-		FName NewIdWeapon,
-		FAdditionalWeaponInfo NewAdditionalWeaponInfo,
-		int32 NewCurrentIndex);
-
-	void ForwardSwitch(
-		bool bIsSuccess,
-		int32 ChangeToIndex,
-		FName NewIdWeapon,
-		FAdditionalWeaponInfo NewAdditionalWeaponInfo,
-		int32 NewCurrentIndex);
-	void PreviousSwitch(
-		bool bIsSuccess,
-		int32 ChangeToIndex,
-		FName NewIdWeapon,
-		FAdditionalWeaponInfo NewAdditionalWeaponInfo,
-		int32 NewCurrentIndex);
 };
-#pragma endregion
